@@ -1,5 +1,5 @@
 import { el, clear } from '../dom.js';
-import { ID, t, fmtNumber, fmtPercent } from '../i18n/id.js';
+import { ID, t, fmtNumber, fmtPercent } from '../i18n/en.js';
 import { PLAYBACK_SPEEDS } from '../../config/operations.js';
 import { PRESETS } from '../../config/presets.js';
 import { formatSimTime } from '../../sim/clock.js';
@@ -50,7 +50,7 @@ export function createAppBar(container, app) {
       const e = app.engine;
       const preset = PRESETS.find((p) => p.id === app.presetId) || PRESETS[0];
       siteName.textContent = ID.presets[preset.id];
-      siteSub.textContent = `ρ ${fmtPercent(e.theory.rho)} · ${e.bays.filter((b) => b.active).length} bay aktif · seed ${e.config.operations.seed}`;
+      siteSub.textContent = `ρ ${fmtPercent(e.theory.rho)} · ${e.bays.filter((b) => b.active).length} active bays · seed ${e.config.operations.seed}`;
       if (presetSel.value !== app.presetId) presetSel.value = app.presetId;
       live.classList.toggle('paused', !app.running);
       liveText.textContent = `${app.running ? ID.tower.live : ID.tower.paused} ${formatSimTime(e.time, e.config.operations.calendar).replace(' WIB', '')}`;

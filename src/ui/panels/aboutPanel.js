@@ -1,5 +1,5 @@
 import { el, clear } from '../dom.js';
-import { ID } from '../i18n/id.js';
+import { ID } from '../i18n/en.js';
 
 // Panel "Tentang Simulasi" sebagai modal: persyaratan, asumsi, asumsi direvisi, keterbatasan, catatan teori.
 export function showAbout(modal, extra = {}) {

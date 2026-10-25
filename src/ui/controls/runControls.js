@@ -1,5 +1,5 @@
 import { el } from '../dom.js';
-import { ID, fmtNumber } from '../i18n/id.js';
+import { ID, fmtNumber } from '../i18n/en.js';
 import { PLAYBACK_SPEEDS } from '../../config/operations.js';
 import { PRESETS } from '../../config/presets.js';
 import { formatSimTime } from '../../sim/clock.js';

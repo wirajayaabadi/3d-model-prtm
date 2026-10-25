@@ -1,5 +1,5 @@
 import { el, panel, clear, table, downloadText, toast } from '../dom.js';
-import { ID, fmtNumber, fmtPercent } from '../i18n/id.js';
+import { ID, fmtNumber, fmtPercent } from '../i18n/en.js';
 import { comparisonCsv } from '../../metrics/export.js';
 import { formatDuration } from '../../sim/clock.js';
 
@@ -12,7 +12,7 @@ export function createComparePanel(container, app) {
     el('p', { class: 'note', text: ID.compare.fairNote }),
     el('div', { class: 'row' },
       el('button', { class: 'small primary', text: ID.compare.store, onClick: () => app.storeRun() }),
-      el('button', { class: 'small', text: ID.compare.export, onClick: () => (app.storedRuns.length ? downloadText('bandingkan-skenario.csv', comparisonCsv(app.storedRuns)) : toast(ID.compare.empty)) }),
+      el('button', { class: 'small', text: ID.compare.export, onClick: () => (app.storedRuns.length ? downloadText('compare-scenarios.csv', comparisonCsv(app.storedRuns)) : toast(ID.compare.empty)) }),
       el('button', { class: 'small', text: ID.compare.clear, onClick: () => app.clearRuns() }),
     ),
     el('p', { class: 'note', text: ID.compare.maxNote }),

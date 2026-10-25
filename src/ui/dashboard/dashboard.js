@@ -1,5 +1,5 @@
 import { el, panel, clear, kv, tile, table, downloadText } from '../dom.js';
-import { ID, fmtNumber, fmtPercent, fmtLiter } from '../i18n/id.js';
+import { ID, fmtNumber, fmtPercent, fmtLiter } from '../i18n/en.js';
 import { formatDuration } from '../../sim/clock.js';
 import { createLineChart, CHART_COLORS } from './charts.js';
 import { truckLogCsv, bayStatsCsv, seriesCsv, summaryCsv } from '../../metrics/export.js';
@@ -36,10 +36,10 @@ export function createDashboard(container, app) {
   });
 
   const exportRow = el('div', { class: 'row' },
-    el('button', { class: 'small', text: ID.dash.exportTrucks, onClick: () => downloadText(`${app.presetId}-log-truk.csv`, truckLogCsv(app.engine)) }),
-    el('button', { class: 'small', text: ID.dash.exportBays, onClick: () => downloadText(`${app.presetId}-statistik-bay.csv`, bayStatsCsv(app.engine)) }),
-    el('button', { class: 'small', text: ID.dash.exportSeries, onClick: () => downloadText(`${app.presetId}-deret-waktu.csv`, seriesCsv(app.engine)) }),
-    el('button', { class: 'small', text: ID.dash.exportSummary, onClick: () => downloadText(`${app.presetId}-ringkasan.csv`, summaryCsv(app.engine.summary())) }),
+    el('button', { class: 'small', text: ID.dash.exportTrucks, onClick: () => downloadText(`${app.presetId}-truck-log.csv`, truckLogCsv(app.engine)) }),
+    el('button', { class: 'small', text: ID.dash.exportBays, onClick: () => downloadText(`${app.presetId}-bay-stats.csv`, bayStatsCsv(app.engine)) }),
+    el('button', { class: 'small', text: ID.dash.exportSeries, onClick: () => downloadText(`${app.presetId}-time-series.csv`, seriesCsv(app.engine)) }),
+    el('button', { class: 'small', text: ID.dash.exportSummary, onClick: () => downloadText(`${app.presetId}-summary.csv`, summaryCsv(app.engine.summary())) }),
   );
 
   p.body.append(

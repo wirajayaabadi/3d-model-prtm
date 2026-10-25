@@ -1,5 +1,5 @@
 import { el, panel, clear, toast } from '../dom.js';
-import { ID, t } from '../i18n/id.js';
+import { ID, t } from '../i18n/en.js';
 import { PRODUCT_IDS } from '../../config/products.js';
 import { BAY_STATE_STYLE } from '../theme.js';
 import { isLightColor } from '../dom.js';

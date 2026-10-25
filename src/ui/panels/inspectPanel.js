@@ -1,5 +1,5 @@
 import { el, panel, clear, kv, isLightColor } from '../dom.js';
-import { ID, fmtNumber, fmtPercent, fmtLiter } from '../i18n/id.js';
+import { ID, fmtNumber, fmtPercent, fmtLiter } from '../i18n/en.js';
 import { formatDuration } from '../../sim/clock.js';
 import { TRUCK_STATES } from '../../sim/models/truck.js';
 

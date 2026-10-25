@@ -36,12 +36,12 @@ describe('Jam, kejadian dan RNG (Bagian 7-8)', () => {
     expect(l / 20000).toBeGreaterThan(172);
     expect(l / 20000).toBeLessThan(188);
   });
-  it('format jam Indonesia', () => {
+  it('clock and duration format', () => {
     const cal = { startHour: 6, timezone: 'WIB' };
-    expect(formatSimTime(0, cal)).toBe('Hari 1, 06:00 WIB');
-    expect(formatSimTime(H, cal)).toBe('Hari 2, 06:00 WIB');
-    expect(formatDuration(750)).toBe('12 mnt 30 dtk');
-    expect(formatDuration(5400)).toBe('1 jam 30 mnt');
+    expect(formatSimTime(0, cal)).toBe('Day 1, 06:00 WIB');
+    expect(formatSimTime(H, cal)).toBe('Day 2, 06:00 WIB');
+    expect(formatDuration(750)).toBe('12 min 30 s');
+    expect(formatDuration(5400)).toBe('1 h 30 min');
   });
 });
 

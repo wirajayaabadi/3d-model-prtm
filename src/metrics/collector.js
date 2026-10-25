@@ -63,7 +63,7 @@ export class Collector {
       this.exitedAfterHorizon++;
       truck.exitedAfterHorizon = true;
     }
-    this.truckLog.push(this.record(truck, now, 'selesai'));
+    this.truckLog.push(this.record(truck, now, 'completed'));
   }
 
   record(truck, now, status) {

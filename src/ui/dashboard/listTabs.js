@@ -1,5 +1,5 @@
 import { el, clear } from '../dom.js';
-import { ID, fmtNumber } from '../i18n/id.js';
+import { ID, fmtNumber } from '../i18n/en.js';
 import { formatDuration } from '../../sim/clock.js';
 import { BAY_STATE_STYLE } from '../theme.js';
 import { TRUCK_STATES } from '../../sim/models/truck.js';
@@ -17,7 +17,7 @@ export function createListTabs(container, app) {
     tabBtns[k] = el('button', { onClick: () => { tab = k; lastKey = ''; } }, ID.tower.tabs[k], el('span', { class: 'n' }));
     tabs.append(tabBtns[k]);
   }
-  tabs.append(el('span', { class: 'site', text: 'ITJ Plumpang' }));
+  tabs.append(el('span', { class: 'site', text: ID.tower.appName }));
   const rows = el('div', { class: 'rows' });
   container.append(tabs, rows);
   let lastKey = '';

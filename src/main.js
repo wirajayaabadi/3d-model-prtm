@@ -5,7 +5,7 @@ import { PRODUCT_IDS } from './config/products.js';
 import { SceneView } from './render/scene.js';
 import { snapshotPoses } from './render/animation.js';
 import { el, clear, toast } from './ui/dom.js';
-import { ID, t, fmtNumber, fmtLiter } from './ui/i18n/id.js';
+import { ID, t, fmtNumber, fmtLiter } from './ui/i18n/en.js';
 import { createAppBar } from './ui/controls/appBar.js';
 import { createZoomControls } from './ui/controls/zoomControls.js';
 import { createKpiCards } from './ui/dashboard/kpiCards.js';

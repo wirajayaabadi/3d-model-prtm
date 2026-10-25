@@ -1,5 +1,5 @@
 import { el } from '../dom.js';
-import { ID, t, fmtNumber, fmtPercent } from '../i18n/id.js';
+import { ID, t, fmtNumber, fmtPercent } from '../i18n/en.js';
 import { formatDuration } from '../../sim/clock.js';
 
 // Kartu KPI melayang di kiri atas: truk di terminal, bay berkomitmen, throughput, utilisasi teoretis.

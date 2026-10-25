@@ -1,5 +1,5 @@
 import { el, panel, field, numberInput, toast, isLightColor } from '../dom.js';
-import { ID, fmtNumber } from '../i18n/id.js';
+import { ID, fmtNumber } from '../i18n/en.js';
 import { PRODUCT_IDS } from '../../config/products.js';
 import { rebalanceShares } from '../../config/presets.js';
 

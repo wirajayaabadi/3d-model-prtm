@@ -1,5 +1,5 @@
 import { el, panel, field, numberInput, clear, toast } from '../dom.js';
-import { ID, t, fmtNumber } from '../i18n/id.js';
+import { ID, t, fmtNumber } from '../i18n/en.js';
 import { deepClone } from '../../config/index.js';
 
 // Geometri dan alat ukur: grid, label, kelayakan, dimensi plot/zona/jalan/kendaraan yang dapat diedit (hanya saat jeda).

@@ -12,7 +12,7 @@ import { buildBayBlock } from './assets/bay.js';
 import { buildEnvironment } from './assets/environment.js';
 import { lerpPose } from './animation.js';
 import { BRAND, hexToInt } from '../ui/theme.js';
-import { ID } from '../ui/i18n/id.js';
+import { ID } from '../ui/i18n/en.js';
 import { TRUCK_STATES } from '../sim/models/truck.js';
 
 const DETAIL_DISTANCE = 260;

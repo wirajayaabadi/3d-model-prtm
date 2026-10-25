@@ -71,7 +71,7 @@ describe('Lalu lintas 24 jam untuk setiap preset (Bagian 10, 16)', () => {
     e.traffic.processAcquisitions = (moving) => moving.forEach((m) => (m.blocked = true));
     e.runUntil(e.time + 700);
     expect(e.deadlock).not.toBeNull();
-    expect(e.log.some((l) => l.type === 'deadlock' && l.message === 'Kebuntuan lalu lintas terdeteksi')).toBe(true);
+    expect(e.log.some((l) => l.type === 'deadlock' && l.message === 'Traffic deadlock detected')).toBe(true);
     expect(e.autoPaused).toBe(true);
     e.traffic.stepTruck = origStep;
   });

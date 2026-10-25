@@ -1,5 +1,5 @@
 import { el } from '../dom.js';
-import { ID } from '../i18n/id.js';
+import { ID } from '../i18n/en.js';
 
 // Kolom kontrol tampilan: perbesar, perkecil, atur ulang, denah atas, fokus ke pilihan.
 export function createZoomControls(container, app) {

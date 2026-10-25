@@ -1,5 +1,5 @@
 import { el, clear, isLightColor } from '../dom.js';
-import { ID, t, fmtNumber, fmtPercent, fmtLiter } from '../i18n/id.js';
+import { ID, t, fmtNumber, fmtPercent, fmtLiter } from '../i18n/en.js';
 import { formatDuration } from '../../sim/clock.js';
 import { PRODUCT_IDS } from '../../config/products.js';
 import { BAY_STATE_STYLE, LOAD_STATUS_STYLE } from '../theme.js';
@@ -35,10 +35,10 @@ export function createSideCard(container, app) {
       el('div', { class: 'head' }, el('div', { class: 'ico', text: '🏭' }), el('div', { class: 't' }, el('div', { class: 'caption', text: ID.tower.terminal }), el('strong', { text: ID.app.appName || 'ITJ Plumpang' }), el('div', { class: 'sub', text: t('tower.terminalSub', { w: fmtNumber(e.layout.plot.width), l: fmtNumber(e.layout.plot.length) }) })), el('div', { class: 'acts' }, el('button', { title: ID.tower.openDashboard, onClick: () => app.openDrawer('dashboard'), text: '⤢' }))),
       el('div', { class: 'statusline' }, statusPill, el('span', { text: t('tower.counts', { committed: c.committedBays, toBay: c.reserved, waiting: c.waiting }) })),
       el('div', { class: 'metrics' },
-        metric(ID.tower.metrics.commitment, fmtPercent(obs, 0), `/ ${fmtPercent(th.rho, 0)} teori`, obs || 0),
+        metric(ID.tower.metrics.commitment, fmtPercent(obs, 0), `/ ${fmtPercent(th.rho, 0)} theory`, obs || 0),
         metric(ID.tower.metrics.capacity, `${stallsUsed}`, `/ ${e.effectiveCapacity}`, stallsUsed / Math.max(1, e.effectiveCapacity), stallsUsed / Math.max(1, e.effectiveCapacity) > 0.8 ? 'orange' : 'green'),
-        metric(ID.tower.metrics.exited, fmtNumber(c.exited), `truk · ${fmtNumber((c.exited - c.exitedAfterHorizon) / hours, 1)}/jam`, Math.min(1, (c.exited - c.exitedAfterHorizon) / hours / Math.max(1, th.mu))),
-        metric(ID.tower.metrics.volume, fmtNumber(c.totalVolume / 1000, 0), 'ribu liter', Math.min(1, c.totalVolume / (th.lambda * 24 * e.config.operations.requestedVolumeL || 1))),
+        metric(ID.tower.metrics.exited, fmtNumber(c.exited), `trucks · ${fmtNumber((c.exited - c.exitedAfterHorizon) / hours, 1)}/h`, Math.min(1, (c.exited - c.exitedAfterHorizon) / hours / Math.max(1, th.mu))),
+        metric(ID.tower.metrics.volume, fmtNumber(c.totalVolume / 1000, 0), 'thousand L', Math.min(1, c.totalVolume / (th.lambda * 24 * e.config.operations.requestedVolumeL || 1))),
       ),
       el('h4', { text: ID.tower.products }),
       el('div', { class: 'list' }, ...items),
@@ -95,8 +95,8 @@ export function createSideCard(container, app) {
       ),
       ...kv([
         [ID.bay.completed, fmtNumber(st.serviceCount)],
-        ['T_commit teoretis', `${fmtNumber(th.tCommitMin, 1)} mnt`],
-        ['μ bay', `${fmtNumber(th.mu, 2)} truk/jam`],
+        ['Theoretical T_commit', `${fmtNumber(th.tCommitMin, 1)} min`],
+        ['Bay μ', `${fmtNumber(th.mu, 2)} trucks/h`],
         [ID.bay.active, b.active || b.pendingDeactivation ? ID.common.yes : ID.common.no],
         [ID.bay.pendingProducts, b.pendingProducts ? b.pendingProducts.map((p) => e.config.products[p].name).join(', ') : '—'],
       ]),

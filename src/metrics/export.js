@@ -13,7 +13,7 @@ export function toCsv(rows, columns) {
 }
 
 export function truckLogCsv(engine) {
-  const rows = [...engine.collector.truckLog, ...[...engine.trucks.values()].map((t) => engine.collector.record(t, engine.time, 'belum selesai'))];
+  const rows = [...engine.collector.truckLog, ...[...engine.trucks.values()].map((t) => engine.collector.record(t, engine.time, 'unfinished'))];
   const cols = [
     'id', 'label', 'product', 'status', 'afterHorizon', 'requestedVolume', 'loadedVolume', 'bay', 'stall',
     'arrival', 'facilityEntry', 'queueEntry', 'dispatch', 'bayArrival', 'loadingStart', 'loadingEnd', 'bayClear', 'exit',
@@ -87,7 +87,7 @@ export function summaryRows(summary) {
 
 export function summaryCsv(summary) {
   const row = summaryRows(summary);
-  return toCsv(Object.entries(row).map(([k, v]) => ({ parameter: k, nilai: v })), ['parameter', 'nilai']);
+  return toCsv(Object.entries(row).map(([k, v]) => ({ parameter: k, value: v })), ['parameter', 'value']);
 }
 
 export function comparisonCsv(summaries) {

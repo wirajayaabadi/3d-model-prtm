@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { box, cyl, canvasTexture, print, screen, compact, stripGeometry, segmentPoints, polygonGeometry, rectOutline, mergeFlat, contactShadow, FONT } from '../materials.js';
 import { BRAND, hexToInt } from '../../ui/theme.js';
-import { fmtNumber, fmtPercent, ID } from '../../ui/i18n/id.js';
+import { fmtNumber, fmtPercent, ID } from '../../ui/i18n/en.js';
 
 function flat(geom, material, y, order = 0) {
   const m = new THREE.Mesh(geom, material);
@@ -220,7 +220,7 @@ export function buildEnvironment({ layout, network, config, M, renderer }) {
   details.add(railMesh);
 
   // Bangunan: ruang kontrol dengan pita kaca biru dan dinding layar; kantor dan bengkel
-  const names = { controlRoom: ID.labels.controlRoom, office: 'Kantor', workshop: 'Bengkel' };
+  const names = { controlRoom: ID.labels.controlRoom, office: ID.labels.office, workshop: ID.labels.workshop };
   let display = null;
   for (const b of f.context.buildings) {
     const w = b.x1 - b.x0, d = b.z1 - b.z0, cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2;

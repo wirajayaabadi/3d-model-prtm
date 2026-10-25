@@ -18,7 +18,7 @@ import { Traffic } from './traffic.js';
 import { Collector } from '../metrics/collector.js';
 import { computeTravelTimes, computeTheory } from '../metrics/theory.js';
 
-export const DEADLOCK_MESSAGE = 'Kebuntuan lalu lintas terdeteksi';
+export const DEADLOCK_MESSAGE = 'Traffic deadlock detected';
 const DEADLOCK_SECONDS = 600;
 const MAX_DRAWN_HOLDING = 3;
 
@@ -28,7 +28,7 @@ export class Engine {
     this.presetId = presetId;
     this.configErrors = validateConfig(this.config);
     if (this.configErrors.length) {
-      const err = new Error('Konfigurasi tidak valid: ' + this.configErrors.map((e) => e.code).join(', '));
+      const err = new Error('Invalid configuration: ' + this.configErrors.map((e) => e.code).join(', '));
       err.errors = this.configErrors;
       throw err;
     }
@@ -717,7 +717,7 @@ export class Engine {
   summary() {
     const counts = this.liveCounts();
     const tm = this.collector.timeMetrics(this, { withinHorizon: true });
-    const unfinished = [...this.trucks.values()].map((t) => this.collector.record(t, this.time, 'belum selesai'));
+    const unfinished = [...this.trucks.values()].map((t) => this.collector.record(t, this.time, 'unfinished'));
     const hours = Math.min(this.time, this.horizon) / 3600;
     return {
       presetId: this.presetId,

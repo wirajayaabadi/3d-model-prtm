@@ -1,0 +1,22 @@
+{
+  "name": "itj-plumpang-sim",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Simulasi 3D antrean dan pengisian truk tangki di ITJ Plumpang (prototipe edukasi)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "headless": "node scripts/run-headless.js"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "vitest": "^2.1.0"
+  }
+}

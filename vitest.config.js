@@ -1,0 +1,8 @@
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    include: ['tests/**/*.test.js'],
+    testTimeout: 180000,
+    hookTimeout: 180000,
+  },
+});

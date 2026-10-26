@@ -95,15 +95,19 @@ export function createDashboard(container, app) {
       const obsC = e.observedCommitment();
       const hours = Math.min(e.time, e.horizon) / 3600;
       const thr = hours > 0 ? (c.exited - c.exitedAfterHorizon) / hours : null;
-      const pairs = [
-        [ID.dash.theoreticalCapacity, `${fmtNumber(th.mu, 2)} ${ID.dash.perHour}`],
-        [ID.dash.theoreticalRho, fmtPercent(th.rho)],
-        [ID.dash.observedCommitment, fmtPercent(obsC)],
-        [`${ID.dash.observedThroughput} / ${ID.dash.arrivalRate}`, `${thr == null ? '—' : fmtNumber(thr, 2)} / ${fmtNumber(th.lambda, 1)} ${ID.dash.perHour}`],
-        [ID.dash.worstSubset, `${th.worstSubset.products.map((pid) => prods[pid].name).join(' + ')}: ${fmtPercent(th.worstSubset.ratio)}`],
+      const lt0 = e.collector.littlesLaw(e, e.time);
+      const worstNames = th.worstSubset.products.map((pid) => prods[pid].name).join(' + ');
+      const rows = [
+        [ID.dash.rowCapacity, `μ = ${fmtNumber(th.mu, 2)}`, thr == null ? '—' : fmtNumber(thr, 2)],
+        [ID.dash.rowUtilization, `ρ = ${fmtPercent(th.rho)}`, `${fmtPercent(obsC)} ${ID.dash.commitment.toLowerCase()}`],
+        [ID.dash.rowArrival, fmtNumber(th.lambda, 1), `${fmtNumber(lt0.lambdaPerHour, 2)} ${ID.dash.admittedRate}`],
+        [el('span', {}, ID.dash.rowWorstSubset, el('div', { class: 'small muted', text: worstNames })), fmtPercent(th.worstSubset.ratio), '—'],
+        [ID.dash.rowStatus, el('span', { class: `pill ${{ stable: 'ok', nearCapacity: 'warn', overloaded: 'bad' }[th.status]}`, text: ID.dash.status[th.status].split(' —')[0] }), c.holding > 0 || c.waiting >= e.effectiveCapacity ? el('span', { class: 'pill bad', text: `${ID.dash.queue}: ${c.waiting} · ${ID.dash.holding}: ${c.holding}` }) : el('span', { class: 'pill ok', text: `${ID.dash.queue}: ${c.waiting}` })],
       ];
-      if (e.config.operations.hourlyProfileEnabled) pairs.push([ID.dash.dailyAverage, fmtPercent(th.rho)], [ID.dash.peakHour, fmtPercent(th.rhoPeak)]);
-      theory.append(kv(pairs), el('div', { class: 'small ' + (th.productMixBinding ? 'warn' : 'muted'), text: th.productMixBinding ? ID.dash.mixBinding : ID.dash.mixNotBinding }), el('p', { class: 'note', text: ID.dash.observedNote }));
+      if (e.config.operations.hourlyProfileEnabled) rows.push([ID.dash.rowPeak, `ρ = ${fmtPercent(th.rhoPeak)}`, '—']);
+      const tbl = table([ID.dash.colMetric, ID.dash.colTheory, ID.dash.colObserved], rows, [1, 2]);
+      tbl.querySelectorAll('td, th').forEach((cell) => (cell.style.whiteSpace = 'normal'));
+      theory.append(tbl, el('div', { class: 'small ' + (th.productMixBinding ? 'warn' : 'muted'), style: { marginTop: '6px' }, text: th.productMixBinding ? ID.dash.mixBinding : ID.dash.mixNotBinding }), el('p', { class: 'note', text: ID.dash.observedNote }));
 
       const tm = e.collector.timeMetrics(e, { withinHorizon: !app.includeAfterHorizon });
       clear(timeTable);

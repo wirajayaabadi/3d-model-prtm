@@ -1,0 +1,21 @@
+{
+  "lang": "id",
+  "note": "Naskah narasi video (hanya bahasa Indonesia). `shot` + `delay` = saat kalimat mulai; `until` = shot terakhir yang boleh dilewati kalimat itu. `tts` (opsional) adalah ejaan untuk mesin suara bila berbeda dari `text`. Setelah mengubah naskah, jalankan scripts/make-voice.py agar berkas suara dan durasinya ikut diperbarui. `speed` (opsional) mempercepat satu kalimat agar muat di slotnya.",
+  "segments": [
+    {"id": "where", "shot": "where", "delay": 0.6, "until": "where", "text": "ITJ Plumpang berada di Jakarta Utara. Terminal BBM ini milik PT Pertamina Patra Niaga."},
+    {"id": "supply", "shot": "supply", "delay": 0.5, "until": "supply", "text": "BBM datang lewat pipa dari Balongan dan lewat kapal, lalu dikirim ke Jabodetabek, Bandung, dan Garut.", "tts": "BBM datang lewat pipa dari Balongan dan lewat kapal, lalu dikirim ke [[dʒˌabodetˈabɛk]], Bandung, dan Garut."},
+    {"id": "aerial", "shot": "aerial", "delay": 0.6, "until": "aerial", "text": "Tugasnya menerima, menimbun, dan menyalurkan sekitar 20 persen kebutuhan BBM nasional."},
+    {"id": "storage", "shot": "storage", "delay": 0.5, "until": "storageLow", "text": "Tangki timbunnya menampung 324.000 kiloliter, menjaga stok wilayah layanan."},
+    {"id": "gate", "shot": "gate", "delay": 0.7, "until": "gateLow", "text": "Truk tangki masuk lewat gerbang, lalu menunggu giliran menuju jalur pemuatan."},
+    {"id": "bays", "shot": "bays", "delay": 0.7, "until": "baysLow", "text": "Pemuatan diatur sistem otomasi terminal, agar cepat dan takarannya tepat."},
+    {"id": "bayClose", "shot": "bayClose", "delay": 0.5, "until": "bayClose", "text": "Setiap jalur melayani beberapa produk."},
+    {"id": "truck", "shot": "wheel", "delay": 0.9, "until": "truck", "text": "Inilah truk tangkinya. Kapasitasnya 32.000 liter, terbagi dalam 4 kompartemen yang dipisahkan dinding sekat."},
+    {"id": "trip", "shot": "tripExit", "delay": 0.8, "until": "trip", "text": "Dari Plumpang, truk mengantar BBM ke lebih dari 120 lembaga penyalur, sampai ke SPBU.", "tts": "Dari Plumpang, truk mengantar BBM ke lebih dari 120 lembaga penyalur, sampai ke S P B U."},
+    {"id": "visit", "shot": "visit", "delay": 0.6, "until": "v.opening", "text": "Pada 7 Oktober 2026 kami berkunjung, disambut manajemen ITJ."},
+    {"id": "v.start", "shot": "v.briefing", "delay": 0.5, "until": "v.health", "text": "Kami mengikuti pengarahan, lalu tekanan darah diperiksa sebelum masuk area operasi."},
+    {"id": "v.safety", "shot": "v.induction", "delay": 0.5, "until": "v.ppe", "text": "Petugas memberi arahan keselamatan, dan kami mengenakan alat pelindung diri."},
+    {"id": "v.field", "shot": "v.field", "delay": 0.5, "until": "v.walk", "text": "Di lapangan, kami mendengar penjelasan operasi sambil menyusuri area terminal."},
+    {"id": "v.close", "shot": "v.discussion", "delay": 1.5, "until": "v.closing", "text": "Kunjungan ditutup dengan diskusi kelompok, presentasi, dan diskusi bersama manajemen ITJ."},
+    {"id": "thanks", "shot": "thanks", "delay": 0.9, "until": "thanks", "text": "Terima kasih, ITJ Plumpang, atas sambutan dan ilmunya."}
+  ]
+}

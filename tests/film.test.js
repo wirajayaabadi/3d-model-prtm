@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { SHOTS, TOTAL, TOTAL_BARS, BAR, BPM, LEAD, MUSIC, PARTS, VISIT_STEPS, locate, partStart, fmtTime } from '../src/film/shots.js';
 import { CONTENT } from '../src/film/content.js';
 import { bedLevels, Soundtrack } from '../src/film/audio.js';
+import { NARRATION, NARRATION_LANG, spokenAt } from '../src/film/narration.js';
 
 describe('garis waktu video', () => {
   it('shot bersambung tanpa celah dan bagian berurutan', () => {
@@ -108,5 +109,42 @@ describe('suara video', () => {
     const s = new Soundtrack();
     expect(s.available).toBe(false);
     expect(() => { s.unlock(); s.update(10, true); s.setMuted(true); }).not.toThrow();
+  });
+});
+
+describe('narasi video', () => {
+  it('setiap kalimat punya naskah, berkas suara dan durasi', () => {
+    expect(NARRATION_LANG).toBe('id');
+    expect(NARRATION.length).toBeGreaterThan(10);
+    for (const n of NARRATION) {
+      expect(n.text.length, n.id).toBeGreaterThan(10);
+      expect(n.url, n.id).toBeTruthy();
+      expect(fs.existsSync(new URL(`../src/film/assets/voice/${n.id}.m4a`, import.meta.url)), n.id).toBe(true);
+      expect(n.dur, n.id).toBeGreaterThan(1.5);
+    }
+  });
+  it('setiap kalimat selesai sebelum gambarnya berganti dan tidak menimpa kalimat berikutnya', () => {
+    NARRATION.forEach((n, i) => {
+      expect(n.end, `${n.id} melewati slotnya`).toBeLessThanOrEqual(n.slotEnd - 0.3);
+      if (i) expect(n.start - NARRATION[i - 1].end, `${n.id} terlalu rapat`).toBeGreaterThanOrEqual(0.8);
+    });
+    expect(NARRATION[0].start).toBeGreaterThan(LEAD); // setelah nada pembuka lagu
+    expect(NARRATION.at(-1).end).toBeLessThan(TOTAL - 3); // selesai sebelum video meredup
+  });
+  it('spokenAt menemukan kalimat yang sedang diucapkan', () => {
+    const n = NARRATION[3];
+    expect(spokenAt(n.start + 0.1).id).toBe(n.id);
+    expect(spokenAt(n.end + 0.3)).toBeUndefined();
+    expect(spokenAt(n.start - 0.1, 0.2).id).toBe(n.id);
+    expect(spokenAt(0)).toBeUndefined();
+  });
+  it('pilihan narasi: mati bila pengguna mematikannya atau bahasanya bukan Indonesia', () => {
+    const s = new Soundtrack();
+    expect(s.voiceOn).toBe(true);
+    s.setVoiceLanguage(false);
+    expect(s.voiceOn).toBe(false);
+    s.setVoiceLanguage(true);
+    s.setVoice(false);
+    expect(s.voiceOn).toBe(false);
   });
 });

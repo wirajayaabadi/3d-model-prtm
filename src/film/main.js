@@ -18,6 +18,7 @@ import { buildTruckShow } from '../presentation/scenes/truckShow.js';
 import { CONTENT } from './content.js';
 import { SHOTS, TOTAL, PARTS, FADE, BAR, VISIT_STEPS, locate, partStart, fmtTime, labelDelay } from './shots.js';
 import { Soundtrack } from './audio.js';
+import { NARRATION_LANG } from './narration.js';
 import { registerOffline } from '../offline/register.js';
 
 const SEED = 20261025;
@@ -63,7 +64,8 @@ class Film {
     this.lastFrame = performance.now();
     this.v = new THREE.Vector3();
     this.audio = new Soundtrack();
-    this.audio.preload(); // musik latar didekode sambil adegan 3D disiapkan
+    this.audio.setVoiceLanguage(this.lang === NARRATION_LANG);
+    this.audio.preload(); // musik latar dan narasi didekode sambil adegan 3D disiapkan
     this.buildChrome();
     this.preload().then(() => this.initScene());
   }
@@ -209,6 +211,7 @@ class Film {
         this.refs.time,
         el('div', { class: 'parts' }, ...this.refs.parts),
         el('span', { class: 'grow' }),
+        (this.refs.voice = el('button', { type: 'button', class: 'cb voice', onClick: () => this.toggleVoice(), text: ui.voice })),
         (this.refs.sound = el('button', { type: 'button', class: 'cb sound', onClick: () => this.toggleSound(), text: '♪' })),
         el('button', { type: 'button', class: 'cb', title: ui.language, onClick: () => this.toggleLanguage(), text: this.lang === 'id' ? 'ID' : 'EN' }),
         el('button', { type: 'button', class: 'cb', title: ui.fullscreen, onClick: () => this.toggleFullscreen(), text: '⛶' }),
@@ -237,6 +240,16 @@ class Film {
     b.classList.toggle('off', this.audio.muted);
     b.title = `${this.audio.muted ? ui.soundOn : ui.soundOff} (M)`;
     b.setAttribute('aria-pressed', String(!this.audio.muted));
+    const v = this.refs.voice, on = this.audio.voicePref;
+    v.hidden = !this.audio.available || this.lang !== NARRATION_LANG; // narasi hanya ada dalam bahasa Indonesia
+    v.classList.toggle('off', !on);
+    v.title = `${on ? ui.voiceOff : ui.voiceOn} (N)`;
+    v.setAttribute('aria-pressed', String(on));
+  }
+  toggleVoice() {
+    this.audio.unlock();
+    this.audio.setVoice(!this.audio.voicePref);
+    this.syncSound();
   }
   toggleSound() {
     this.audio.unlock();
@@ -286,6 +299,7 @@ class Film {
       if (low === 'f') return done(), this.toggleFullscreen();
       if (low === 'l') return done(), this.toggleLanguage();
       if (low === 'm') return done(), this.toggleSound();
+      if (low === 'n') return done(), this.toggleVoice();
     });
   }
 
@@ -322,6 +336,7 @@ class Film {
     try {
       localStorage.setItem('itj-pres-lang', this.lang);
     } catch {}
+    this.audio.setVoiceLanguage(this.lang === NARRATION_LANG);
     this.buildChrome();
   }
   toggleFullscreen() {

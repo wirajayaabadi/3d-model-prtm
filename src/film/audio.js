@@ -1,15 +1,20 @@
 // Suara halaman video. Musik latar adalah rekaman pilihan tim (assets/background-music.mp3, salinan dari
 // docs/background-music.mp3): 120 BPM, C mayor, sekitar 2,5 menit. Garis waktu di shots.js dipotong mengikuti birama
 // dan bagian lagu itu, dan waktu video sama dengan waktu rekaman, jadi potongan gambar jatuh tepat di ketukan.
+// Narasi (voice-over) bahasa Indonesia diputar per kalimat dari assets/voice/ (lihat narration.js); selama narasi
+// berbicara, musik diturunkan otomatis.
 // Efek di atas musik disintesis dengan Web Audio: desir pergantian teks, "cekrek" kamera pada foto kunjungan, denting
 // saat tag muncul, deru mesin truk dan desis rem angin di SPBU. Tidak ada derau latar yang terus-menerus: lapisan
 // "suasana terminal" dan derau jalan pada mesin dihapus karena terdengar sebagai desis di adegan 3D.
 // Semua peristiwa adalah fungsi dari waktu video, sehingga suara mengikuti jeda, lompat adegan dan geser garis waktu.
 import { SHOTS, TOTAL, locate, labelDelay } from './shots.js';
+import { NARRATION, spokenAt } from './narration.js';
 import musicUrl from './assets/background-music.mp3?url';
 
 const LOOKAHEAD = 0.5; // detik efek yang dijadwalkan di depan; cukup untuk frame yang tersendat
 const MUSIC_GAIN = 0.5; // rekaman sudah di-master keras (puncak -0,4 dB); diturunkan agar efek tetap terdengar
+const VOICE_GAIN = 1.6; // berkas narasi dinormalkan ke -20 dB RMS; diangkat agar jelas di atas musik
+const DUCK = 0.3; // musik selama narasi berbicara: sekitar -10 dB
 const hz = (midi) => 440 * 2 ** ((midi - 69) / 12);
 const PING_NOTES = [72, 76, 79, 84, 88]; // C – E – G – C – E, senada dengan lagu (C mayor)
 
@@ -20,6 +25,16 @@ export function loadTrack() {
     .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`HTTP ${r.status}`))))
     .then((data) => new OfflineAudioContext(2, 1, 44100).decodeAudioData(data));
   return trackPromise;
+}
+const decode = (url) =>
+  fetch(url)
+    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`HTTP ${r.status}`))))
+    .then((data) => new OfflineAudioContext(1, 1, 44100).decodeAudioData(data));
+// Narasi: satu AudioBuffer per kalimat. Kalimat yang gagal dimuat dilewati; yang lain tetap berbunyi.
+let voicePromise;
+export function loadVoices() {
+  voicePromise ??= Promise.all(NARRATION.map((n) => decode(n.url).then((buf) => [n.id, buf], () => null))).then((list) => Object.fromEntries(list.filter(Boolean)));
+  return voicePromise;
 }
 
 // Efek satu-kali yang terikat pada garis waktu.
@@ -50,9 +65,12 @@ export function bedLevels(t) {
 
 // Graf audio dan penjadwal; dipakai oleh konteks waktu-nyata maupun OfflineAudioContext (uji tingkat suara).
 export class Mix {
-  constructor(ctx, track = null) {
+  constructor(ctx, track = null, voices = null) {
     this.ctx = ctx;
     this.track = track; // AudioBuffer rekaman musik; bisa menyusul setelah selesai didekode
+    this.voices = voices; // { id kalimat: AudioBuffer } narasi; juga bisa menyusul
+    this.voiceOn = true;
+    this.speaking = [];
     const g = (v) => {
       const n = ctx.createGain();
       n.gain.value = v;
@@ -68,8 +86,11 @@ export class Mix {
     this.master.connect(limiter).connect(ctx.destination);
     this.musicOut = g(MUSIC_GAIN); // rekaman langsung ke master, tanpa gema tambahan
     this.sfxOut = g(1.6); // efek diangkat agar tidak tenggelam di bawah rekaman yang padat
-    this.musicOut.connect(this.master);
+    this.duck = g(1); // musik menepi saat narasi berbicara
+    this.musicOut.connect(this.duck).connect(this.master);
     this.sfxOut.connect(this.master);
+    this.voiceOut = g(VOICE_GAIN);
+    this.voiceOut.connect(this.master);
     // Gema ruang dari derau yang meluruh, hanya untuk efek
     const len = Math.floor(ctx.sampleRate * 2.6), ir = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let ch = 0; ch < 2; ch++) {
@@ -116,9 +137,13 @@ export class Mix {
     setTimeout(() => old.disconnect(), 300);
     this.newBus();
     this.stopTrack();
+    this.stopVoice();
   }
   beds(at, t, on = true) {
     const b = on ? bedLevels(t) : { engine: 0, pitch: 0.62 };
+    const n = on && this.voiceOn && this.voices ? spokenAt(t + 0.2, 0.2) : null; // mulai menepi sesaat sebelum kalimat
+    const talk = !!(n && this.voices[n.id]);
+    this.duck.gain.setTargetAtTime(talk ? DUCK : 1, at, talk ? 0.1 : 0.3);
     this.engineGain.gain.setTargetAtTime(b.engine * 0.04, at, 0.3);
     this.engineOsc.forEach((o, i) => o.frequency.setTargetAtTime(58 * b.pitch * (i ? 1.5 : 1), at, 0.4));
     this.engineLfo.frequency.setTargetAtTime(6 + 9 * b.pitch, at, 0.4);
@@ -145,6 +170,31 @@ export class Mix {
     p.fade.gain.setTargetAtTime(0, now, 0.03);
     p.src.stop(now + 0.25);
     this.playing = null;
+  }
+
+  // ---------- Narasi ----------
+  // Ucapkan satu kalimat mulai waktu konteks `at`; `offset` > 0 bila video dilanjutkan di tengah kalimat.
+  speak(n, at, offset = 0) {
+    const buf = this.voiceOn && this.voices?.[n.id];
+    if (!buf || offset >= buf.duration - 0.1) return;
+    const src = this.ctx.createBufferSource(), fade = this.ctx.createGain();
+    src.buffer = buf;
+    fade.gain.setValueAtTime(offset ? 0.0001 : 1, at);
+    if (offset) fade.gain.linearRampToValueAtTime(1, at + 0.06);
+    src.connect(fade).connect(this.voiceOut);
+    src.start(at, offset);
+    const item = { src, fade };
+    this.speaking.push(item);
+    src.onended = () => (this.speaking = this.speaking.filter((x) => x !== item));
+  }
+  stopVoice() {
+    const now = this.ctx.currentTime;
+    for (const { src, fade } of this.speaking) {
+      fade.gain.cancelScheduledValues(now);
+      fade.gain.setTargetAtTime(0, now, 0.03);
+      src.stop(now + 0.25);
+    }
+    this.speaking = [];
   }
 
   // ---------- Pembangun bunyi ----------
@@ -214,9 +264,10 @@ export class Mix {
     this.burst(at, 0.7, this.filter('highpass', 3200, 0.6, this.env(0.07, at, 0.02, 0.7)));
   }
 
-  // Jadwalkan efek dengan waktu video di [from, to); toAudio memetakan waktu video ke waktu konteks audio.
+  // Jadwalkan efek dan narasi dengan waktu video di [from, to); toAudio memetakan waktu video ke waktu konteks audio.
   schedule(from, to, toAudio) {
     for (const c of CUES) if (c.t >= from && c.t < to) c.fn(this, toAudio(c.t));
+    for (const n of NARRATION) if (n.start >= from && n.start < to) this.speak(n, toAudio(n.start));
   }
 }
 
@@ -227,7 +278,15 @@ export class Soundtrack {
     try {
       this.muted = localStorage.getItem('itj-film-muted') === '1';
     } catch {}
+    this.voicePref = true; // pilihan pengguna: narasi nyala/mati (tombol atau N)
+    try {
+      this.voicePref = localStorage.getItem('itj-film-voice') !== '0';
+    } catch {}
+    this.voiceLang = true; // narasi hanya ada dalam bahasa Indonesia
     this.on = false;
+  }
+  get voiceOn() {
+    return this.voicePref && this.voiceLang;
   }
   get available() {
     return typeof window !== 'undefined' && !!(window.AudioContext || window.webkitAudioContext);
@@ -242,13 +301,34 @@ export class Soundtrack {
         if (this.mix) this.mix.track = track;
       })
       .catch((e) => console.warn('Musik latar tidak dapat dimuat', e));
+    loadVoices().then((voices) => {
+      this.voices = voices;
+      if (this.mix) this.mix.voices = voices;
+    });
+  }
+  setVoice(on) {
+    this.voicePref = on;
+    try {
+      localStorage.setItem('itj-film-voice', on ? '1' : '0');
+    } catch {}
+    this.syncVoice();
+  }
+  setVoiceLanguage(matches) {
+    this.voiceLang = matches;
+    this.syncVoice();
+  }
+  syncVoice() {
+    if (!this.mix) return;
+    this.mix.voiceOn = this.voiceOn;
+    if (!this.voiceOn) this.mix.stopVoice();
   }
   // Dipanggil dari gestur pengguna (klik putar, tombol): browser baru mengizinkan suara setelah itu
   unlock() {
     if (!this.available) return;
     if (!this.mix) {
       const Ctx = window.AudioContext || window.webkitAudioContext;
-      this.mix = new Mix(new Ctx(), this.track);
+      this.mix = new Mix(new Ctx(), this.track, this.voices);
+      this.mix.voiceOn = this.voiceOn;
       this.out = this.mix.master.gain;
       this.out.value = this.muted ? 0 : 0.9;
       this.preload();
@@ -281,6 +361,8 @@ export class Soundtrack {
       this.anchorFilm = t;
       this.cursor = t;
       this.on = true;
+      const n = spokenAt(t); // dilanjutkan di tengah kalimat: teruskan kalimat itu dari posisinya
+      if (n && t > n.start) m.speak(n, this.anchorAudio, t - n.start);
     }
     // Musik: mulai dari posisi rekaman yang sama dengan waktu video (juga bila rekaman baru selesai didekode)
     if (m.track && !m.playing && t < m.track.duration) {
@@ -297,9 +379,9 @@ export class Soundtrack {
 }
 
 // Render luring untuk memeriksa tingkat suara (dipakai dari konsol/pengujian, bukan saat video diputar).
-export async function renderSoundtrack(from = 0, to = TOTAL, sampleRate = 22050, { music = true, sfx = true } = {}) {
+export async function renderSoundtrack(from = 0, to = TOTAL, sampleRate = 22050, { music = true, sfx = true, voice = true } = {}) {
   const ctx = new OfflineAudioContext(2, Math.ceil((to - from) * sampleRate), sampleRate);
-  const mix = new Mix(ctx, music ? await loadTrack() : null);
+  const mix = new Mix(ctx, music ? await loadTrack() : null, voice ? await loadVoices() : null);
   if (!sfx) mix.sfxOut.gain.value = 0;
   mix.playTrack(0, from);
   mix.schedule(from, to, (x) => x - from);

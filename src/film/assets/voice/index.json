@@ -1,0 +1,20 @@
+{
+  "engine": "piper id_ID-news_tts-medium",
+  "seconds": {
+    "where": 6.57,
+    "supply": 6.69,
+    "aerial": 6.32,
+    "storage": 6.43,
+    "gate": 5.18,
+    "bays": 4.93,
+    "bayClose": 2.49,
+    "truck": 8.17,
+    "trip": 7.26,
+    "visit": 6.03,
+    "v.start": 5.76,
+    "v.safety": 4.92,
+    "v.field": 5.21,
+    "v.close": 6.13,
+    "thanks": 3.95
+  }
+}

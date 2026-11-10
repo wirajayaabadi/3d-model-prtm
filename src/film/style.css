@@ -119,6 +119,7 @@ body.ended #controls .go.replay { display: inline-flex; }
 #controls .cb.sound { font-size: 17px; position: relative; }
 #controls .cb.sound.off { color: rgba(255,255,255,.45); }
 #controls .cb.sound.off::after { content: ''; position: absolute; left: 7px; right: 7px; top: 50%; height: 2px; background: #fff; transform: rotate(-38deg); }
+#controls .cb.voice.off { color: rgba(255,255,255,.45); text-decoration: line-through; }
 #controls .cb[hidden] { display: none; }
 #controls .cb.play { width: 44px; height: 40px; background: #fff; color: var(--ink); border-color: #fff; font-size: 14px; }
 #controls .time { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--soft); min-width: 86px; }

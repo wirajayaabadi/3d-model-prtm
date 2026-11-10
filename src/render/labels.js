@@ -6,6 +6,7 @@ export class LabelLayer {
     this.container = container;
     this.tooltip = tooltipEl;
     this.labels = new Map(); // key -> { el, anchor, title, meta, visible }
+    this.avoid = []; // persegi layar {x0, y0, x1, y1} yang tidak boleh ditimpa label (mis. teks presentasi)
     this.v = new THREE.Vector3();
   }
   ensure(key, { title, meta, kind = 'bay' }) {
@@ -47,7 +48,8 @@ export class LabelLayer {
         continue;
       }
       this.v.copy(l.anchor).project(camera);
-      if (this.v.z > 1) {
+      // Di belakang kamera atau jauh di luar bingkai: sembunyikan (bukan dijepit ke tepi)
+      if (this.v.z > 1 || Math.abs(this.v.x) > 1.15 || Math.abs(this.v.y) > 1.15) {
         l.el.classList.remove('visible');
         continue;
       }
@@ -62,6 +64,10 @@ export class LabelLayer {
     for (const c of candidates) {
       const clash = accepted.some((a) => Math.abs(a.x - c.x) < 124 && Math.abs(a.y - c.y) < 48);
       if (clash) {
+        c.l.el.classList.remove('visible');
+        continue;
+      }
+      if (this.avoid.some((r) => c.x + 150 > r.x0 && c.x < r.x1 && c.y + 48 > r.y0 && c.y < r.y1)) {
         c.l.el.classList.remove('visible');
         continue;
       }

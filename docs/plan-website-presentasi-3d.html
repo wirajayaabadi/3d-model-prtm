@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rencana Website Presentasi 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Satu dunia visual: palet terminal simulasi (biru brand di atas putih), satu tema terang. */
+  --ink: #13261c;
+  --muted: #5c6b66;
+  --paper: #ffffff;
+  --wash: #f3f6fa;
+  --line: #dce3ea;
+  --blue: #0067b3;
+  --blue-tint: #e6f0f8;
+  --red: #c8202d;
+  --green-text: #4e7a12;
+  --green-tint: #eef6dc;
+  --amber-tint: #fff4e0;
+  --amber-text: #8a4b00;
+  --display: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { background: var(--wash); }
+body { margin: 0; background: var(--wash); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.accent { display: flex; height: 4px; }
+.accent i { flex: 1; }
+.accent i:nth-child(1) { background: #e31e2d; }
+.accent i:nth-child(2) { background: var(--blue); }
+.accent i:nth-child(3) { background: #a3c93a; }
+
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+header.top { background: var(--paper); border-bottom: 1px solid var(--line); }
+header.top .wrap { padding-top: 36px; padding-bottom: 32px; display: grid; gap: 14px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); }
+h1 { font-family: var(--display); font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 0; font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; max-width: 22ch; }
+.lede { font-size: 18px; color: var(--muted); max-width: 65ch; margin: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--blue-tint); color: #004a80; white-space: nowrap; }
+.chip.green { background: var(--green-tint); color: var(--green-text); }
+.chip.amber { background: var(--amber-tint); color: var(--amber-text); }
+.chip.grey { background: #eef1f4; color: var(--muted); }
+
+nav.toc { background: var(--paper); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 2; }
+nav.toc .wrap { display: flex; gap: 4px; overflow-x: auto; padding-top: 8px; padding-bottom: 8px; scrollbar-width: none; }
+nav.toc a { flex: 0 0 auto; text-decoration: none; color: var(--muted); font-size: 13.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px; }
+nav.toc a:hover { background: var(--blue-tint); color: var(--blue); }
+
+main .wrap { display: grid; gap: 28px; padding-top: 32px; padding-bottom: 64px; }
+section.block { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 28px clamp(18px, 3vw, 32px); display: grid; gap: 16px; }
+section.block > h2 { font-family: var(--display); font-size: 24px; line-height: 1.25; margin: 0; font-weight: 800; letter-spacing: -0.01em; text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+section.block > h2 .no { color: var(--blue); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; min-width: 2ch; }
+h3 { font-size: 17px; margin: 6px 0 0; font-weight: 700; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+ul, ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; background: var(--paper); }
+.card h3 { margin: 0; }
+.card.key { border-color: var(--blue); background: linear-gradient(0deg, var(--paper), var(--paper)), var(--blue-tint); box-shadow: inset 4px 0 0 var(--blue); }
+.card p, .card li { font-size: 15px; }
+
+/* Perjalanan kamera: satu dunia, zoom dari skala nasional ke truk */
+.journey { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.journey .stop { padding: 14px 12px 16px; border-right: 1px solid var(--line); display: grid; gap: 6px; align-content: start; position: relative; background: var(--paper); }
+.journey .stop:last-child { border-right: 0; }
+.journey .scale { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--blue); }
+.journey .stop strong { font-size: 15px; line-height: 1.3; }
+.journey .stop span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.journey .stop .bar { height: 4px; border-radius: 2px; background: var(--blue); margin-bottom: 4px; }
+@media (max-width: 860px) { .journey { grid-template-columns: repeat(2, minmax(0, 1fr)); } .journey .stop { border-bottom: 1px solid var(--line); } }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+thead th { background: var(--wash); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
+tbody tr:last-child td { border-bottom: 0; }
+td.ch { font-weight: 700; white-space: nowrap; }
+td.ch small { display: block; font-weight: 600; color: var(--muted); font-size: 12px; }
+td .chip { margin: 2px 4px 2px 0; }
+.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+.phase { display: grid; grid-template-columns: 120px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.phase:first-of-type { border-top: 0; }
+.phase .when { font-weight: 700; font-size: 14px; display: grid; gap: 4px; align-content: start; }
+.phase .when .days { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 600; font-size: 13px; }
+.phase .what { display: grid; gap: 6px; }
+.phase .what strong { font-size: 16px; }
+.phase .exit { font-size: 14px; color: var(--green-text); }
+@media (max-width: 560px) { .phase { grid-template-columns: 1fr; gap: 4px; } }
+
+.decision { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.decision:first-of-type { border-top: 0; }
+.decision .q { width: 28px; height: 28px; border-radius: 8px; background: var(--blue); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; }
+.decision p { font-size: 15px; }
+.decision .rec { font-size: 14px; color: var(--muted); }
+
+.note { border-left: 4px solid var(--amber-text); background: var(--amber-tint); padding: 12px 16px; border-radius: 0 10px 10px 0; font-size: 15px; max-width: none; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+pre.tree { margin: 0; padding: 14px 16px; background: var(--wash); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55; }
+footer { color: var(--muted); font-size: 13px; padding: 0 0 40px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+html { scroll-behavior: smooth; }
+section[id] { scroll-margin-top: 64px; }
+</style>
+</head>
+<body>
+<div class="accent" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Business Immersion · ITJ Plumpang · Rencana kerja</div>
+    <h1>Website presentasi 3D: dari profil Pertamina sampai truk di filling bay</h1>
+    <p class="lede">Satu dunia 3D yang dijelajahi seperti slide. Kamera bergerak dari skala nasional ke terminal ITJ Plumpang, masuk ke filling shed, lalu mengikuti truk tangki sampai SPBU. Empat bab presentasi ditempelkan pada perjalanan itu, dan simulasi antrean yang sudah kita bangun menjadi bukti hidup di tengah cerita.</p>
+    <div class="meta">
+      <span class="chip">Durasi sasaran 15–20 menit</span>
+      <span class="chip">7 bab · ±28 langkah presenter</span>
+      <span class="chip green">Memakai ulang engine dan aset simulasi</span>
+      <span class="chip amber">±13 hari kerja pengembangan</span>
+    </div>
+  </div>
+</header>
+<nav class="toc" aria-label="Daftar isi">
+  <div class="wrap">
+    <a href="#konsep">Konsep</a>
+    <a href="#alur">Alur cerita</a>
+    <a href="#bab">Isi per bab</a>
+    <a href="#reuse">Pakai ulang</a>
+    <a href="#arsitektur">Arsitektur</a>
+    <a href="#tahap">Tahapan</a>
+    <a href="#tim">Peran tim</a>
+    <a href="#konten">Konten</a>
+    <a href="#risiko">Risiko</a>
+    <a href="#keputusan">Keputusan</a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+<section class="block" id="konsep">
+  <h2><span class="no">01</span>Konsep pengalaman</h2>
+  <p>Website ini bukan slide yang diberi latar 3D. Seluruh presentasi adalah satu adegan Three.js, dan setiap "slide" adalah titik kamera beserta lapisan informasi yang dinyalakan pada titik itu. Penonton selalu tahu di mana mereka berada dalam rantai energi, karena kamera tidak pernah memotong ke tempat lain tanpa transisi.</p>
+  <div class="cols">
+    <div class="card key">
+      <h3>Mode Presenter</h3>
+      <p>Dipakai saat presentasi. Tombol panah, spasi atau clicker memajukan satu langkah. Setiap langkah punya catatan pembicara di jendela kedua dan pengatur waktu per bab. Kamera dan simulasi berjalan dengan seed tetap, jadi demo selalu sama seperti saat latihan.</p>
+    </div>
+    <div class="card">
+      <h3>Mode Jelajah</h3>
+      <p>Dipakai saat sesi tanya jawab atau dibagikan setelah acara. Penonton memilih bab dari menu, mengklik objek di adegan untuk membuka kartu informasi, dan membuka simulasi penuh yang sudah ada.</p>
+    </div>
+    <div class="card">
+      <h3>Satu bahasa visual</h3>
+      <p>Gaya miniatur isometrik dan palet merah, biru, hijau dari simulasi diteruskan ke seluruh website. Kartu melayang, pin lokasi dan stepper perjalanan truk dipakai lagi, sehingga bab simulasi terasa sebagai bagian dari cerita yang sama.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="alur">
+  <h2><span class="no">02</span>Alur cerita sebagai perjalanan kamera</h2>
+  <p>Skala mengecil dari kiri ke kanan. Bab presentasi mengikuti skala ini, sehingga urutan materi sama dengan urutan zoom kamera.</p>
+  <div class="journey" role="list">
+    <div class="stop" role="listitem"><div class="bar" style="width:100%"></div><div class="scale">Nasional</div><strong>Peta energi Indonesia</strong><span>Kilang, terminal, jalur kapal. Bab 1 dan 4.</span></div>
+    <div class="stop" role="listitem"><div class="bar" style="width:84%"></div><div class="scale">Grup</div><strong>Holding dan subholding</strong><span>Struktur Pertamina sebagai diorama bertingkat. Bab 1.</span></div>
+    <div class="stop" role="listitem"><div class="bar" style="width:66%"></div><div class="scale">Terminal</div><strong>ITJ Plumpang</strong><span>Tank farm, filling shed, gerbang, area tunggu. Bab 2.</span></div>
+    <div class="stop" role="listitem"><div class="bar" style="width:48%"></div><div class="scale">Bisnis</div><strong>Business Model Canvas</strong><span>Sembilan panel melayang di atas terminal. Bab 3.</span></div>
+    <div class="stop" role="listitem"><div class="bar" style="width:32%"></div><div class="scale">Operasi</div><strong>Filling bay dan truk</strong><span>Simulasi berjalan langsung. Bab 5.</span></div>
+    <div class="stop" role="listitem"><div class="bar" style="width:16%"></div><div class="scale">Konsumen</div><strong>Truk tiba di SPBU</strong><span>Rantai nilai ditutup di pompa. Bab 4 dan 6.</span></div>
+  </div>
+</section>
+
+<section class="block" id="bab">
+  <h2><span class="no">03</span>Isi per bab</h2>
+  <p>Kolom "Dari tim" adalah bahan yang harus dikumpulkan dari hasil kunjungan. Angka dan fakta perusahaan diberi tanda <span class="chip amber">cek</span> sampai dicocokkan dengan Annual Report, Sustainability Report atau materi briefing ITJ.</p>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Bab</th><th>Pertanyaan yang dijawab</th><th>Adegan 3D dan interaksi</th><th>Isi utama</th><th>Dari tim</th><th class="num">Langkah</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="ch">0 · Pembuka<small>±1 mnt</small></td>
+          <td>Siapa kami dan apa yang kami kunjungi?</td>
+          <td>Kamera turun dari langit ke miniatur ITJ Plumpang, truk sudah bergerak.</td>
+          <td>Judul, nama tim, tanggal kunjungan, agenda empat bab.</td>
+          <td>Nama anggota, tanggal, foto tim di lokasi bila diizinkan.</td>
+          <td class="num">2</td>
+        </tr>
+        <tr>
+          <td class="ch">1 · Company Profile<small>±3 mnt</small></td>
+          <td>Apa itu Pertamina, bergerak di bisnis apa, dan mengapa penting bagi negara?</td>
+          <td>Peta Indonesia stilistik dengan pin kilang dan terminal. Diorama holding: blok Pertamina (Persero) di tengah, subholding sebagai gedung di sekelilingnya. Klik gedung membuka kartu lini bisnis. Panel foto dan video dokumentasi melayang di samping.</td>
+          <td>Profil singkat (BUMN energi, berdiri 1957 <span class="chip amber">cek</span>). Lini bisnis per subholding: Upstream, Refining &amp; Petrochemical, Commercial &amp; Trading (Patra Niaga), Gas, Power &amp; NRE, Integrated Marine Logistics <span class="chip amber">cek</span>. Posisi strategis. Peran ketahanan energi: penyaluran BBM penugasan dan subsidi, BBM Satu Harga, cadangan operasional <span class="chip amber">cek</span>.</td>
+          <td>3–5 angka kunci terbaru, foto dan video kunjungan, kutipan dari narasumber.</td>
+          <td class="num">5</td>
+        </tr>
+        <tr>
+          <td class="ch">2 · Business Unit Overview<small>±3 mnt</small></td>
+          <td>Unit apa yang kami kunjungi, apa tugasnya, dan apa kontribusinya?</td>
+          <td>Zoom ke ITJ Plumpang. Area terminal menyala bergantian: penerimaan, tank farm, filling shed, gerbang dan area tunggu, ruang kontrol, HSSE. Setiap area punya kartu fungsi dan foto. Mode "Tanpa atap" dipakai di filling shed.</td>
+          <td>ITJ Plumpang di bawah Pertamina Patra Niaga <span class="chip amber">cek</span>. Tujuan unit, tanggung jawab per fungsi, alur kerja harian, kontribusi terhadap pasokan BBM wilayah layanan <span class="chip amber">cek</span>.</td>
+          <td>Daftar fungsi yang benar-benar dikunjungi, struktur organisasi unit, angka throughput harian dan wilayah layanan dari briefing.</td>
+          <td class="num">6</td>
+        </tr>
+        <tr>
+          <td class="ch">3 · Business Model<small>±3 mnt</small></td>
+          <td>Bagaimana unit ini dan Pertamina menciptakan serta menangkap nilai?</td>
+          <td>Sembilan panel Business Model Canvas naik dari tanah dan mengelilingi terminal. Setiap panel menunjuk objek nyata di adegan: produk ke strip produk di bay, pelanggan ke SPBU, pemasok ke kapal dan pipa, biaya ke truk dan tangki.</td>
+          <td>Produk dan layanan (Pertalite, Pertamax, Pertamax Turbo, Pertadex, biosolar). Pelanggan (SPBU, industri, penugasan pemerintah). Pemasok (kilang, impor). Mitra (transportir, pemilik SPBU). Sumber pendapatan dan komponen biaya <span class="chip amber">cek</span>.</td>
+          <td>Isi sembilan blok canvas dalam 1–2 kalimat per blok, diskusi tim tentang proposisi nilai.</td>
+          <td class="num">5</td>
+        </tr>
+        <tr>
+          <td class="ch">4 · Value Chain &amp; Stakeholder<small>±3 mnt</small></td>
+          <td>Bagaimana BBM mengalir dari hulu ke hilir, dan siapa saja yang berkepentingan?</td>
+          <td>Kamera mundur ke peta. Animasi aliran: sumur, kilang, kapal, terminal, truk, SPBU, konsumen. Unit yang bertanggung jawab di setiap tahap ditandai. Peta stakeholder sebagai cincin di sekitar terminal, diukur menurut pengaruh dan kepentingan.</td>
+          <td>Rantai hulu ke hilir dan hubungan antar-subholding. Stakeholder: regulator (Kementerian ESDM, BPH Migas), pemegang saham, mitra, karyawan, masyarakat sekitar, konsumen <span class="chip amber">cek</span>. Isu keselamatan dan zona penyangga dibahas dengan merujuk pernyataan resmi.</td>
+          <td>Diagram alur dari materi kunjungan, daftar stakeholder dan prioritasnya.</td>
+          <td class="num">5</td>
+        </tr>
+        <tr>
+          <td class="ch">5 · Simulasi dan temuan<small>±3 mnt</small></td>
+          <td>Apa yang kami pelajari tentang kapasitas filling bay?</td>
+          <td>Simulasi yang sudah ada berjalan di adegan yang sama. Presenter memutar tiga preset dengan seed tetap: Baseline, Kedatangan +50%, dan Pergeseran ke Pertamax Turbo. Kartu KPI dan stepper perjalanan truk tampil seperti di aplikasi.</td>
+          <td>ρ = λ ÷ μ dengan angka nyata dari dokumen teori (24,8 truk/jam, ρ 0,73). Antrean melonjak menjelang ρ = 1. Bauran produk bisa menjadi kendala sebelum jumlah bay. Semua angka dilabeli hipotetis.</td>
+          <td>Satu atau dua insight lapangan yang menjelaskan mengapa simulasi relevan.</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td class="ch">6 · Penutup<small>±2 mnt</small></td>
+          <td>Apa kesimpulan dan rekomendasi kami?</td>
+          <td>Truk keluar gerbang dan tiba di SPBU kecil. Kamera naik kembali ke peta.</td>
+          <td>Tiga insight, dua rekomendasi, ucapan terima kasih, tanya jawab. Tombol masuk ke Mode Jelajah.</td>
+          <td>Rumusan insight dan rekomendasi tim.</td>
+          <td class="num">2</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block" id="reuse">
+  <h2><span class="no">04</span>Yang dipakai ulang dan yang dibangun baru</h2>
+  <div class="cols">
+    <div class="card">
+      <h3>Dipakai ulang dari simulasi</h3>
+      <ul>
+        <li>Engine headless, enam preset dan seed tetap untuk bab 5.</li>
+        <li>Renderer, pencahayaan, pustaka material dan cache geometri.</li>
+        <li>Aset truk, filling bay, tangki, gerbang, ruang kontrol dan lanskap.</li>
+        <li>Rig kamera dengan tujuan kamera dan pelonggaran halus.</li>
+        <li>Label terproyeksi, pin lokasi, tooltip, kartu KPI dan stepper perjalanan.</li>
+        <li>Token warna, font dan komponen kartu dari sistem desain.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Dibangun baru</h3>
+      <ul>
+        <li>Mesin cerita: daftar langkah, navigasi, catatan pembicara, rute per bab.</li>
+        <li>Peta Indonesia stilistik dengan pin dan jalur kapal.</li>
+        <li>Diorama holding dan subholding.</li>
+        <li>Aset baru: kilang, kapal tanker, SPBU, pipa, sumur.</li>
+        <li>Panel Business Model Canvas dan cincin stakeholder.</li>
+        <li>Panel media untuk foto dan video, dengan pemutar yang terkontrol.</li>
+        <li>Animasi aliran rantai nilai.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="arsitektur">
+  <h2><span class="no">05</span>Arsitektur teknis</h2>
+  <p>Website presentasi dibuat sebagai halaman kedua di proyek Vite yang sama. Simulasi tetap di <span class="mono">/</span>, presentasi di <span class="mono">/presentasi/</span>. Keduanya memakai modul render dan engine yang sama, sehingga perbaikan pada satu sisi ikut ke sisi lain.</p>
+  <pre class="tree" aria-label="Struktur folder yang diusulkan">presentasi/index.html             halaman kedua (Vite multi-page)
+src/presentation/
+  main.js                         boot, mode Presenter / Jelajah, routing #bab-1 ... #bab-6
+  story/engine.js                 langkah aktif, maju/mundur, transisi kamera, timer per bab
+  story/steps.js                  daftar ±28 langkah: kamera, lapisan, kartu, perintah simulasi
+  content/id.js                   seluruh teks presentasi (diedit tim tanpa menyentuh kode)
+  content/media/                  foto dan video kunjungan yang sudah dikompresi
+  scenes/indonesiaMap.js          peta stilistik, pin kilang dan terminal, jalur kapal
+  scenes/holding.js               diorama holding dan subholding
+  scenes/canvasBoard.js           sembilan panel Business Model Canvas
+  scenes/valueChain.js            aliran sumur ke SPBU, cincin stakeholder
+  assets/{refinery,ship,spbu}.js  aset prosedural baru
+  ui/presenterNotes.js            jendela catatan pembicara (BroadcastChannel)
+src/render, src/sim, src/ui       dipakai ulang tanpa diubah</pre>
+  <h3>Bentuk satu langkah</h3>
+  <p>Setiap langkah adalah data, bukan kode, sehingga urutan presentasi bisa diubah tim saat latihan.</p>
+  <pre class="tree">{ id: 'bab2-filling-shed', bab: 2,
+  kamera: { target: [60, 0, 16], jarak: 70, arah: 'isometrik' },
+  lapisan: ['terminal', 'tanpaAtap'],
+  sorot: ['bay:1-12'],
+  kartu: 'bab2.fillingShed',
+  simulasi: { preset: 'baseline', seed: 20261025, menit: 45 },
+  catatan: 'Jelaskan alur truk dari gerbang ke bay...' }</pre>
+  <h3>Simulasi di dalam presentasi</h3>
+  <p>Saat presenter masuk ke bab 5, engine dijalankan cepat secara headless sampai menit yang ditentukan langkah, lalu diputar langsung. Seed dan preset tetap, jadi grafik dan antrean yang tampil di depan penonton sama persis dengan saat latihan.</p>
+</section>
+
+<section class="block" id="tahap">
+  <h2><span class="no">06</span>Tahapan kerja</h2>
+  <p>Perkiraan untuk satu pengembang dengan bantuan AI. Pengumpulan konten oleh tim berjalan paralel sejak hari pertama, dan menjadi syarat untuk tahap 2 sampai 5.</p>
+  <div>
+    <div class="phase"><div class="when">Tahap 0<span class="days">paralel, 3–4 hari</span></div><div class="what"><strong>Konten dan naskah</strong><span>Tim mengisi naskah per bab, memilih foto dan video, mencocokkan angka dengan sumber resmi, dan menyetujui alur cerita.</span><span class="exit">Selesai bila: naskah 7 bab disetujui dan media sudah terkumpul dengan izin.</span></div></div>
+    <div class="phase"><div class="when">Tahap 1<span class="days">2 hari</span></div><div class="what"><strong>Kerangka presentasi</strong><span>Halaman kedua, mesin cerita, navigasi keyboard dan clicker, routing per bab, catatan pembicara, satu adegan terminal yang dipakai ulang.</span><span class="exit">Selesai bila: presenter bisa maju dan mundur melewati 28 langkah kosong dengan transisi kamera halus.</span></div></div>
+    <div class="phase"><div class="when">Tahap 2<span class="days">3 hari</span></div><div class="what"><strong>Bab 0, 1 dan 2</strong><span>Peta Indonesia, diorama holding, panel media, sorotan area terminal dan kartu fungsi ITJ.</span><span class="exit">Selesai bila: bab 1 dan 2 bisa dipresentasikan dari awal sampai akhir dengan naskah final.</span></div></div>
+    <div class="phase"><div class="when">Tahap 3<span class="days">2 hari</span></div><div class="what"><strong>Bab 3</strong><span>Sembilan panel canvas yang menunjuk objek nyata di adegan.</span><span class="exit">Selesai bila: setiap blok canvas terbaca dari kursi belakang ruangan di proyektor.</span></div></div>
+    <div class="phase"><div class="when">Tahap 4<span class="days">3 hari</span></div><div class="what"><strong>Bab 4</strong><span>Aset kilang, kapal dan SPBU, animasi aliran rantai nilai, cincin stakeholder.</span><span class="exit">Selesai bila: aliran sumur sampai SPBU berjalan tanpa jeda dan setiap tahap menunjuk unit yang benar.</span></div></div>
+    <div class="phase"><div class="when">Tahap 5<span class="days">1 hari</span></div><div class="what"><strong>Bab 5 dan 6</strong><span>Simulasi terkunci seed di dalam presentasi, perbandingan tiga preset, penutup dan tombol ke Mode Jelajah.</span><span class="exit">Selesai bila: demo simulasi identik di tiga kali putar berturut-turut.</span></div></div>
+    <div class="phase"><div class="when">Tahap 6<span class="days">2 hari</span></div><div class="what"><strong>Pemolesan dan gladi</strong><span>Uji di laptop dan proyektor tempat acara, mode hemat daya, versi offline, rekaman video cadangan, dua kali gladi bersih dengan timer.</span><span class="exit">Selesai bila: presentasi selesai dalam 15–20 menit dan berjalan di laptop cadangan tanpa internet.</span></div></div>
+  </div>
+</section>
+
+<section class="block" id="tim">
+  <h2><span class="no">07</span>Pembagian peran yang disarankan</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Peran</th><th>Tanggung jawab</th><th>Bab</th></tr></thead>
+      <tbody>
+        <tr><td class="ch">Pemilik cerita</td><td>Menjaga alur dan durasi, menyetujui naskah akhir, memimpin gladi.</td><td>Semua</td></tr>
+        <tr><td class="ch">Penulis bab 1–2</td><td>Profil perusahaan, lini bisnis, peran ketahanan energi, fungsi dan kontribusi ITJ.</td><td>1, 2</td></tr>
+        <tr><td class="ch">Penulis bab 3–4</td><td>Business Model Canvas, rantai nilai, peta stakeholder.</td><td>3, 4</td></tr>
+        <tr><td class="ch">Analis simulasi</td><td>Memilih preset dan menulis temuan kuantitatif dari dokumen teori.</td><td>5</td></tr>
+        <tr><td class="ch">Media dan verifikasi</td><td>Memilih dan mengompres foto dan video, memastikan izin, mencocokkan setiap angka dengan sumber.</td><td>Semua</td></tr>
+        <tr><td class="ch">Pengembang</td><td>Membangun website bersama Claude, mengintegrasikan konten, menyiapkan versi offline.</td><td>Semua</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block" id="konten">
+  <h2><span class="no">08</span>Kebutuhan konten dan aturan pakai</h2>
+  <div class="cols">
+    <div class="card">
+      <h3>Sumber yang dipakai</h3>
+      <ul>
+        <li>Annual Report dan Sustainability Report Pertamina terbaru.</li>
+        <li>Materi briefing dan presentasi dari ITJ Plumpang saat kunjungan.</li>
+        <li>Catatan wawancara dan diskusi tim.</li>
+        <li>Dokumen teori simulasi di folder <span class="mono">docs</span> untuk bab 5.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Foto dan video</h3>
+      <ul>
+        <li>Terminal BBM adalah objek vital. Pakai hanya foto yang diambil dengan izin dan disetujui pihak terminal.</li>
+        <li>Hindari wajah pekerja tanpa persetujuan, layar kontrol, dan detail keamanan.</li>
+        <li>Foto dikompres ke WebP sekitar 300 KB, video ke MP4 720p di bawah 15 MB.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Merek dan klaim</h3>
+      <ul>
+        <li>Logo Pertamina hanya dipakai sebagai identitas subjek studi pada sampul, tidak dibuat ulang di adegan.</li>
+        <li>Setiap halaman memuat catatan "Presentasi akademik, bukan materi resmi Pertamina".</li>
+        <li>Angka simulasi selalu dilabeli hipotetis. Angka perusahaan selalu menyebut sumber dan tahunnya.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="risiko">
+  <h2><span class="no">09</span>Risiko dan cara menanganinya</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Risiko</th><th>Dampak</th><th>Penanganan</th></tr></thead>
+      <tbody>
+        <tr><td class="ch">Laptop atau proyektor lemah</td><td>Animasi patah-patah di depan penguji.</td><td>Mode hemat daya: bayangan dimatikan, resolusi turun otomatis. Uji di perangkat acara pada tahap 6.</td></tr>
+        <tr><td class="ch">Tidak ada internet di ruangan</td><td>Font dan media gagal dimuat.</td><td>Build offline yang menyertakan font dan media, dijalankan dari laptop.</td></tr>
+        <tr><td class="ch">Website gagal total saat acara</td><td>Presentasi berhenti.</td><td>Rekaman video lengkap dan ekspor PDF dari setiap langkah sebagai cadangan.</td></tr>
+        <tr><td class="ch">Angka perusahaan keliru</td><td>Kredibilitas turun saat tanya jawab.</td><td>Peran verifikasi, sumber dan tahun di setiap angka, tanda cek dihapus hanya setelah dicocokkan.</td></tr>
+        <tr><td class="ch">Durasi melebihi jatah</td><td>Bab akhir terpotong.</td><td>Timer per bab di catatan pembicara, langkah opsional yang bisa dilewati.</td></tr>
+        <tr><td class="ch">Konten terlambat</td><td>Pengembangan menunggu.</td><td>Kerangka dan adegan dibangun dengan teks sementara, konten dimasukkan lewat file teks.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="block" id="keputusan">
+  <h2><span class="no">10</span>Keputusan yang perlu kamu ambil sebelum mulai</h2>
+  <div>
+    <div class="decision"><div class="q">1</div><div><p>Berapa durasi presentasi dan berapa orang yang presentasi?</p><p class="rec">Rencana ini mengasumsikan 15–20 menit. Bila lebih pendek, bab 5 bisa diringkas menjadi satu langkah.</p></div></div>
+    <div class="decision"><div class="q">2</div><div><p>Bahasa presentasi: Indonesia, Inggris, atau dua bahasa?</p><p class="rec">Antarmuka simulasi sekarang berbahasa Inggris. Saran: teks presentasi dalam Indonesia, simulasi dibiarkan Inggris, atau tambahkan pilihan bahasa bila audiens campuran.</p></div></div>
+    <div class="decision"><div class="q">3</div><div><p>Kapan tanggal presentasi?</p><p class="rec">Tahapan butuh sekitar 13 hari kerja pengembangan. Bila waktunya lebih pendek, bab 4 bisa memakai diagram 2,5D sederhana dulu.</p></div></div>
+    <div class="decision"><div class="q">4</div><div><p>Fungsi ITJ mana saja yang benar-benar dikunjungi, dan foto apa yang boleh dipakai?</p><p class="rec">Ini menentukan area mana yang disorot di bab 2 dan apakah panel media bisa diisi.</p></div></div>
+    <div class="decision"><div class="q">5</div><div><p>Dijalankan dari laptop saja, atau juga dipublikasikan sebagai tautan untuk penguji?</p><p class="rec">Saran: keduanya. Versi offline untuk acara, tautan privat untuk dibagikan setelahnya.</p></div></div>
+  </div>
+  <p class="note">Langkah berikutnya: setelah lima keputusan ini dijawab, tahap 1 bisa langsung dimulai di proyek yang sama tanpa mengganggu aplikasi simulasi.</p>
+</section>
+
+</div>
+</main>
+<footer><div class="wrap">Rencana kerja tim Business Immersion · Presentasi akademik, bukan materi resmi Pertamina · Angka bertanda cek belum diverifikasi.</div></footer>
+</body>
+</html>

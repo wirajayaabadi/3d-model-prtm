@@ -3,6 +3,7 @@
 // dengan dinding layar kanvas, lanskap (pagar tanaman dan pohon membulat), bayangan kontak, overlay kelayakan.
 import * as THREE from 'three';
 import { box, cyl, canvasTexture, print, screen, compact, stripGeometry, segmentPoints, polygonGeometry, rectOutline, mergeFlat, contactShadow, FONT } from '../materials.js';
+import { buildSite } from './site.js';
 import { BRAND, hexToInt } from '../../ui/theme.js';
 import { fmtNumber, fmtPercent, ID } from '../../ui/i18n/en.js';
 
@@ -24,8 +25,8 @@ export function buildEnvironment({ layout, network, config, M, renderer }) {
   const m4 = new THREE.Matrix4();
 
   // Tanah, plot dan zona (plane datar; tidak ada tekstur)
-  const ground = flat(new THREE.PlaneGeometry(640, 460).rotateX(-Math.PI / 2), M.ground, -0.1);
-  ground.position.set(W / 2 + 30, -0.1, L / 2);
+  const ground = flat(new THREE.PlaneGeometry(1400, 1300).rotateX(-Math.PI / 2), M.ground, -0.2);
+  ground.position.set(W / 2 + 30, -0.2, L / 2 + 60);
   group.add(ground);
   const plot = flat(new THREE.PlaneGeometry(W, L).rotateX(-Math.PI / 2), M.plot, 0);
   plot.position.set(W / 2, 0, L / 2);
@@ -176,18 +177,24 @@ export function buildEnvironment({ layout, network, config, M, renderer }) {
 
   // Tangki penyimpanan: silinder putih, pita biru di atas, cincin pagar, tangga spiral, di atas bund beton
   const tk = f.context.tankGroups;
-  const bx0 = Math.min(...tk.map((t) => t.x - t.radius)) - 6, bx1 = Math.max(...tk.map((t) => t.x + t.radius)) + 6;
-  const bz0 = Math.min(...tk.map((t) => t.z - t.radius)) - 6, bz1 = Math.max(...tk.map((t) => t.z + t.radius)) + 6;
-  box(statics, bx1 - bx0, 0.5, bz1 - bz0, (bx0 + bx1) / 2, 0.25, (bz0 + bz1) / 2, M.concrete, 0.05);
-  box(statics, bx1 - bx0, 1.6, 0.8, (bx0 + bx1) / 2, 0.8, bz0, M.concreteLight, 0.05);
-  box(statics, bx1 - bx0, 1.6, 0.8, (bx0 + bx1) / 2, 0.8, bz1, M.concreteLight, 0.05);
-  box(statics, 0.8, 1.6, bz1 - bz0, bx0, 0.8, (bz0 + bz1) / 2, M.concreteLight, 0.05);
-  box(statics, 0.8, 1.6, bz1 - bz0, bx1, 0.8, (bz0 + bz1) / 2, M.concreteLight, 0.05);
+  // Bund per tangki seperti pada citra satelit: petak rumput bertembok rendah, jalan sempit di antaranya
+  const bundGrass = new THREE.MeshStandardMaterial({ color: hexToInt('#8DBE7E'), roughness: 1 });
+  for (const t of tk) {
+    const s = t.radius * 2 + 10;
+    box(statics, s, 0.3, s, t.x, 0.15, t.z, bundGrass, 0.02, false).receiveShadow = true;
+    box(statics, s, 1.3, 0.6, t.x, 0.65, t.z - s / 2, M.concreteLight, 0.04);
+    box(statics, s, 1.3, 0.6, t.x, 0.65, t.z + s / 2, M.concreteLight, 0.04);
+    box(statics, 0.6, 1.3, s, t.x - s / 2, 0.65, t.z, M.concreteLight, 0.04);
+    box(statics, 0.6, 1.3, s, t.x + s / 2, 0.65, t.z, M.concreteLight, 0.04);
+    cyl(statics, t.radius + 1.2, 0.5, t.x, 0.4, t.z, M.concrete, t.radius + 1.2, 40);
+  }
   const railGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.1, 6);
   const rails = [];
-  for (const t of tk) {
+  tk.forEach((t, ti) => {
     cyl(statics, t.radius, t.height, t.x, t.height / 2 + 0.5, t.z, M.whiteSteel, t.radius, 40);
-    cyl(statics, t.radius + 0.06, 1.4, t.x, t.height - 0.9 + 0.5, t.z, M.brandBlue, t.radius + 0.06, 40);
+    if (t.radius > 10) cyl(statics, t.radius * 0.28, 0.6, t.x, t.height + 0.9, t.z, M.brushedSteel, t.radius * 0.22, 24); // kubah pusat atap
+    // Pita tangki bergantian biru dan merah brand
+    cyl(statics, t.radius + 0.06, 1.4, t.x, t.height - 0.9 + 0.5, t.z, ti % 2 ? M.brandRed : M.brandBlue, t.radius + 0.06, 40);
     cyl(statics, t.radius, 0.5, t.x, t.height + 0.6, t.z, M.whiteSteel, t.radius * 0.1, 40);
     // Cincin pagar atas: tiang instanced + ring
     const n = Math.max(16, Math.round(t.radius * 2.2));
@@ -211,7 +218,8 @@ export function buildEnvironment({ layout, network, config, M, renderer }) {
     stair.castShadow = true;
     details.add(stair);
     contactShadow(group, t.radius * 2.6, t.radius * 2.6, t.x, 0.52, t.z, 0.35);
-  }
+  });
+  if (f.context.site) group.add(buildSite({ site: f.context.site, M }).group);
   const railMesh = new THREE.InstancedMesh(railGeo, M.brushedSteel, rails.length);
   rails.forEach((p, i) => {
     m4.makeTranslation(p.x, p.y, p.z);

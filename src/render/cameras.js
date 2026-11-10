@@ -4,8 +4,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // Rig kamera: tujuan kamera (goal) dengan pelonggaran halus (Bagian B), lima kamera (ikhtisar, samping, atas,
 // bay, terbang), panning dibatasi ke plot dan konteksnya, tanpa fly-in bila pengguna meminta gerakan terbatas.
 export class CameraRig {
-  constructor(canvas, layout, { reduceMotion = false } = {}) {
+  constructor(canvas, layout, { reduceMotion = false, arrowKeys = true, boundless = false } = {}) {
     this.camera = new THREE.PerspectiveCamera(30, 1, 2, 2000);
+    this.arrowKeys = arrowKeys; // false: tombol panah dibiarkan untuk navigasi halaman (presentasi)
+    this.boundless = boundless; // true: target kamera tidak dijepit ke plot (dunia presentasi lebih luas)
+    this.rate = 3; // laju pelonggaran menuju tujuan kamera (per detik)
+    this.keysEnabled = true; // false: WASD/QE diabaikan (mode presenter)
     this.isoDir = new THREE.Vector3(-1, 1.05, 1).normalize(); // arah isometrik dari barat daya: bay menghadap kamera, tangki di kanan belakang
     this.frame = { w: 1, h: 1, left: 0, right: 0 };
     this.controls = new OrbitControls(this.camera, canvas);
@@ -14,7 +18,7 @@ export class CameraRig {
     this.controls.enablePan = true;
     this.controls.screenSpacePanning = false;
     this.controls.minDistance = 12;
-    this.controls.maxDistance = 900;
+    this.controls.maxDistance = 1400;
     this.controls.minPolarAngle = 0.05;
     this.controls.maxPolarAngle = Math.PI * 0.47;
     this.controls.rotateSpeed = 0.55;
@@ -41,7 +45,9 @@ export class CameraRig {
     this.lastInteraction = performance.now();
     this._onKeyDown = (e) => {
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (!this.keysEnabled) return;
       const k = e.key.toLowerCase();
+      if (!this.arrowKeys && k.startsWith('arrow')) return;
       if (['w', 'a', 's', 'd', 'q', 'e', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift'].includes(k)) {
         this.keys.add(k);
         if (k !== 'shift') {
@@ -75,8 +81,12 @@ export class CameraRig {
 
   // Batas panning: plot ditambah konteks (tangki di +X, bangunan di -X).
   panBounds() {
+    if (this.boundless) {
+      this.bounds = null;
+      return;
+    }
     const W = this.layout.plot.width, L = this.layout.plot.length;
-    this.bounds = new THREE.Box3(new THREE.Vector3(-50, 0, -20), new THREE.Vector3(W + 90, 0, L + 40));
+    this.bounds = new THREE.Box3(new THREE.Vector3(-140, 0, -330), new THREE.Vector3(W + 340, 0, L + 440));
   }
 
   goal(mode, ctx = {}) {
@@ -88,7 +98,7 @@ export class CameraRig {
       tgt.set(W / 2 + 22, 0, L / 2 - 6);
       const freeFrac = Math.max(0.3, (this.frame.w - this.frame.left - this.frame.right) / this.frame.w);
       const tanH = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2)) * this.camera.aspect;
-      const d = Math.min(820, Math.max(160, 235 / (2 * tanH * freeFrac)));
+      const d = Math.min(1100, Math.max(160, 330 / (2 * tanH * freeFrac))); // paskan plot + tank farm terdekat
       pos.copy(tgt).addScaledVector(this.isoDir, d);
     } else if (mode === 'side') {
       tgt.set(W / 2, 4, L / 2);
@@ -189,6 +199,23 @@ export class CameraRig {
     this.lastInteraction = performance.now();
   }
 
+  // Terbang ke posisi dan target eksplisit (presentasi): pelonggaran eksponensial dengan laju yang dapat diatur.
+  flyTo(pos, tgt, { rate = 3, immediate = false } = {}) {
+    if (this.free) this.setFree(false);
+    this.mode = 'story';
+    this.followId = null;
+    this.desiredPosition.copy(pos);
+    this.desiredTarget.copy(tgt);
+    this.rate = rate;
+    if (immediate || this.reduceMotion) {
+      this.camera.position.copy(pos);
+      this.controls.target.copy(tgt);
+      this.controls.update();
+      this.animating = false;
+    } else this.animating = true;
+    this.lastInteraction = performance.now();
+  }
+
   // Zoom bertahap menuju target (tombol +/−); factor < 1 mendekat.
   zoomBy(factor) {
     this.animating = false;
@@ -239,10 +266,13 @@ export class CameraRig {
       this.camera.position.lerp(this.desiredPosition, k);
       this.controls.target.lerp(this.desiredTarget, k);
     } else if (this.animating && !this.dragging) {
-      const k = 1 - Math.exp(-dt * 3);
+      const k = 1 - Math.exp(-dt * this.rate);
       this.camera.position.lerp(this.desiredPosition, k);
       this.controls.target.lerp(this.desiredTarget, k);
-      if (this.camera.position.distanceTo(this.desiredPosition) < 0.05 && this.controls.target.distanceTo(this.desiredTarget) < 0.05) this.animating = false;
+      if (this.camera.position.distanceTo(this.desiredPosition) < 0.05 && this.controls.target.distanceTo(this.desiredTarget) < 0.05) {
+        this.animating = false;
+        this.rate = 3;
+      }
     }
     // Putar otomatis hanya dalam mode presentasi, setelah jeda interaksi, tanpa gerakan terbatas.
     this.controls.autoRotate = this.presentation && !this.reduceMotion && !this.dragging && !this.animating && this.mode === 'overview' && performance.now() - this.lastInteraction > 6000;
@@ -262,7 +292,7 @@ export class CameraRig {
     this.frame = { w, h, left: free.left, right: free.right };
     this.camera.aspect = w / h;
     const freeCenter = free.left + (w - free.left - free.right) / 2;
-    this.camera.setViewOffset(w, h, w / 2 - freeCenter, 0, w, h);
+    this.camera.setViewOffset(w, h, w / 2 - freeCenter, free.shiftY || 0, w, h);
     this.camera.updateProjectionMatrix();
     if (this.mode === 'overview' && !this.dragging) {
       const { pos, tgt } = this.goal('overview');

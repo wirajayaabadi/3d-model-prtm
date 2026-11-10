@@ -10,12 +10,18 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "headless": "node scripts/run-headless.js"
+    "headless": "node scripts/run-headless.js",
+    "bake:trucks": "node scripts/bake-trucks.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "gl-matrix": "^3.4.4",
+    "meshoptimizer": "^0.22.0",
     "vite": "^6.0.0",
     "vitest": "^2.1.0"
   }

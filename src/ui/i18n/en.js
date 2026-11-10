@@ -279,6 +279,7 @@ export const ID = {
   tower: {
     appName: 'ITJ Plumpang',
     appSub: 'Fuel queue simulation',
+    openPresentation: 'Open presentation',
     searchPlaceholder: 'Search trucks, bays, stalls, products…',
     noResult: 'Nothing found',
     live: 'Live',

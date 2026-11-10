@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { boxGeo, cylGeo, canvasTexture, print, screenMaterial } from '../materials.js';
 import { BRAND, hexToInt } from '../../ui/theme.js';
+import { getTruckModel } from './truckModels.js';
 
 const bodyCache = new Map(); // productColor -> BufferGeometry
 let chromeGeo = null;
@@ -68,7 +69,73 @@ function mats(M) {
 }
 const highlightMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.25, roughness: 0.45, emissive: 0x2a5c8a, emissiveIntensity: 0.6 });
 
-export function createTruck({ id, label, productColor, M, renderer }) {
+// Placard produk (persegi berwarna produk) di buritan dan kedua sisi tangki: pengganti pita produk pada model GLB.
+const placardMats = new Map();
+function placardMat(hex) {
+  if (!placardMats.has(hex)) placardMats.set(hex, new THREE.MeshStandardMaterial({ color: hexToInt(hex), roughness: 0.5, metalness: 0.05 }));
+  return placardMats.get(hex);
+}
+
+// Truk dari model referensi (bila sudah dimuat): satu mesh berwarna vertex + plat ID + placard produk + lampu.
+function createModelTruck({ id, label, productColor, M, renderer, model }) {
+  const { bodyMat } = mats(M);
+  const x = model.extras || {};
+  const tank = x.tank || { x0: -3, x1: 5, cx: 1, y: 2.3, top: 3.4, halfWidth: 1.2 };
+  const rear = x.rear ?? 4.5;
+  const g = new THREE.Group();
+  g.userData = { type: 'truck', id, model: model.id };
+  const body = new THREE.Mesh(model.geometry, bodyMat);
+  body.castShadow = true;
+  body.userData = g.userData;
+  g.add(body);
+  const plate = canvasTexture(256, 96, (c, w, h) => {
+    c.fillStyle = '#FFFFFF';
+    c.fillRect(0, 0, w, h);
+    c.fillStyle = BRAND.blue;
+    c.fillRect(0, 0, w, 14);
+    print(c, label, w / 2, 70, 44, BRAND.ink, 700, 'center');
+  }, renderer);
+  const pm = screenMaterial(plate.texture);
+  const px = tank.cx - 0.6, py = tank.y - 0.1, pz = tank.halfWidth + 0.02;
+  const pA = new THREE.PlaneGeometry(2.0, 0.75).applyMatrix4(M4(px, py, pz));
+  const pB = new THREE.PlaneGeometry(2.0, 0.75).applyMatrix4(M4(px, py, -pz, 0, Math.PI, 0));
+  const plateGeo = mergeGeometries([pA, pB], false);
+  plateGeo.userData.own = true;
+  const plates = new THREE.Mesh(plateGeo, pm);
+  plates.userData = g.userData;
+  g.add(plates);
+  const pmat = placardMat(productColor);
+  // Placard produk kecil di belakang plat ID (kedua sisi) dan di buritan
+  const qx = px - 1.45, qy = py - 0.05;
+  const q = mergeGeometries([
+    new THREE.PlaneGeometry(0.5, 0.5).applyMatrix4(M4(qx, qy, pz)),
+    new THREE.PlaneGeometry(0.5, 0.5).applyMatrix4(M4(qx, qy, -pz, 0, Math.PI, 0)),
+    new THREE.PlaneGeometry(0.7, 0.7).applyMatrix4(M4(-rear - 0.03, 1.6, 0, 0, -Math.PI / 2, 0)),
+  ], false);
+  q.userData.own = true;
+  const placard = new THREE.Mesh(q, pmat);
+  placard.userData = g.userData;
+  g.add(placard);
+  const brake = new THREE.Mesh(boxGeo(0.08, 0.22, 0.5, 0.02), M.brakeLight);
+  brake.position.set(-rear - 0.05, 1.0, 0.85);
+  brake.visible = false;
+  const brakeR = brake.clone();
+  brakeR.position.z = -0.85;
+  const rev = new THREE.Mesh(boxGeo(0.08, 0.18, 0.3, 0.02), M.reverseLight);
+  rev.position.set(-rear - 0.05, 0.8, 0.45);
+  rev.visible = false;
+  const revR = rev.clone();
+  revR.position.z = -0.45;
+  g.add(brake, brakeR, rev, revR);
+  g.userData.lights = { brake: [brake, brakeR], reverse: [rev, revR] };
+  g.userData.body = body;
+  g.userData.plate = plate;
+  return g;
+}
+
+export function createTruck({ id, label, productColor, M, renderer, modelId }) {
+  const model = modelId ? getTruckModel(modelId) : null;
+  if (model) return createModelTruck({ id, label, productColor, M, renderer, model });
   const { bodyMat, chromeMat } = mats(M);
   const g = new THREE.Group();
   g.userData = { type: 'truck', id };

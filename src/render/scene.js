@@ -8,6 +8,7 @@ import { CameraRig } from './cameras.js';
 import { LabelLayer } from './labels.js';
 import { createMaterialLibrary, disposeGeometryCache } from './materials.js';
 import { createTruck, setTruckLights, setTruckHighlight, WheelPool } from './assets/truck.js';
+import { modelForProduct, onTruckModelsReady } from './assets/truckModels.js';
 import { buildBayBlock } from './assets/bay.js';
 import { buildEnvironment } from './assets/environment.js';
 import { lerpPose } from './animation.js';
@@ -70,6 +71,8 @@ export class SceneView {
     this.visible = true;
     this.contextLost = false;
     this.wheels = new WheelPool(this.scene, this.M);
+    // Model truk referensi dimuat asinkron; saat siap, semua truk dibangun ulang pada frame berikutnya.
+    onTruckModelsReady(() => this.refreshTrucks());
     this.buildMarkers();
     this.rebuild(engine);
     this.installListeners();
@@ -84,9 +87,9 @@ export class SceneView {
     const sun = new THREE.DirectionalLight(0xfff6ea, 2.8);
     sun.position.set(150, 170, -160); // tinggi di timur laut (+X, -Z): bayangan jatuh ke arah kamera isometrik barat daya
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(4096, 4096);
     // Skala adegan ~200 m: normal bias diskalakan agar tidak ada shadow acne di bidang datar.
-    sun.shadow.normalBias = 0.12;
+    sun.shadow.normalBias = 0.2; // frustum bayangan kini menjangkau tapak keliling (texel ~0,19 m)
     sun.shadow.bias = -0.0004;
     sun.shadow.radius = 2;
     s.add(sun, sun.target);
@@ -105,13 +108,13 @@ export class SceneView {
     this.sun.target.position.set(W / 2 + 20, 0, L / 2);
     this.sun.position.set(W / 2 + 20 + 150, 170, L / 2 - 160);
     // Frustum bayangan dipaskan ketat ke plot dan konteks terdekat.
-    const half = Math.hypot(W + 90, L + 40) / 2;
+    const half = Math.hypot(W + 240, L + 560) / 2; // menjangkau tank farm dan tapak keliling
     c.left = -half;
     c.right = half;
     c.top = half;
     c.bottom = -half;
     c.near = 40;
-    c.far = 480;
+    c.far = 900;
     c.updateProjectionMatrix();
     this.sun.target.updateMatrixWorld();
   }
@@ -350,7 +353,7 @@ export class SceneView {
       seen.add(t.id);
       let g = this.trucks.get(t.id);
       if (!g) {
-        g = createTruck({ id: t.id, label: t.label, productColor: products[t.product].color, M: this.M, renderer: this.renderer });
+        g = createTruck({ id: t.id, label: t.label, productColor: products[t.product].color, M: this.M, renderer: this.renderer, modelId: modelForProduct(t.product) });
         this.scene.add(g);
         this.trucks.set(t.id, g);
         if (this.selection?.type === 'truck' && this.selection.id === t.id) setTruckHighlight(g, true);
@@ -364,7 +367,7 @@ export class SceneView {
       const braking = t.travelling && (t.speed < (t._prevSpeed ?? t.speed) - 1e-6 || (t.speed === 0 && !t.atRouteEnd));
       setTruckLights(g, { brake: braking, reverse: !!(seg && seg.reverse && t.speed > 0) });
       t._prevSpeed = t.speed;
-      groups.push(g);
+      if (!g.userData.model) groups.push(g); // roda instanced hanya untuk truk prosedural (model GLB sudah beroda)
     }
     for (const [id, g] of this.trucks) {
       if (!seen.has(id)) {
@@ -470,7 +473,7 @@ export class SceneView {
     this.canvas.style.width = '100%';
     this.canvas.style.height = '100%';
     const pad = this.labelPadding || { left: 0, right: 0 };
-    this.rig.resize(w, h, w > 860 ? { left: pad.left, right: pad.right } : { left: 0, right: 0 });
+    this.rig.resize(w, h, w > 860 ? { left: pad.left, right: pad.right, shiftY: (pad.shiftY || 0) * h } : { left: 0, right: 0 });
   }
 
   getDebugState() {
@@ -492,10 +495,17 @@ export class SceneView {
     };
   }
 
+  refreshTrucks() {
+    for (const g of this.trucks.values()) {
+      this.scene.remove(g);
+      this.disposeTruck(g);
+    }
+    this.trucks.clear();
+  }
   disposeTruck(g) {
     g.traverse((o) => {
       if (o.userData?.plate) o.userData.plate.texture.dispose();
-      if (o.isMesh && o.geometry && o.geometry.type === 'PlaneGeometry') o.geometry.dispose();
+      if (o.isMesh && o.geometry && (o.geometry.type === 'PlaneGeometry' || o.geometry.userData?.own)) o.geometry.dispose(); // geometri milik truk ini; geometri model/cache dibagi
     });
   }
   disposeGroup(group) {

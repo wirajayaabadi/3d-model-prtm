@@ -56,6 +56,11 @@ class Film {
     this.started = false;
     this.ended = false;
     this.loop = this.params.get('loop') === '1';
+    // Putar otomatis: pilihan tersimpan di browser (tombol "Otomatis" atau A); ?autoplay=1 / ?autoplay=0 menimpanya sekali
+    this.autoplay = false;
+    try {
+      this.autoplay = localStorage.getItem('itj-film-autoplay') === '1';
+    } catch {}
     this.shotIndex = -1;
     this.applied3d = null;
     this.labels = [];
@@ -123,7 +128,7 @@ class Film {
     if (!Number.isNaN(at)) {
       this.t = Math.min(TOTAL, Math.max(0, at));
       this.started = true;
-    } else if (this.params.get('autoplay') === '1') this.start();
+    } else if (this.params.get('autoplay') === '1' || (this.autoplay && this.params.get('autoplay') !== '0')) this.start();
     this.$('loading').classList.add('done');
     document.body.classList.toggle('prestart', !this.started);
     requestAnimationFrame((ts) => this.frame(ts));
@@ -176,15 +181,17 @@ class Film {
     document.title = ui.pageTitle;
     this.$('loading').lastChild.textContent = ui.loading;
     this.$('disclaimer').textContent = ui.disclaimer;
-    this.$('modelnote').textContent = ui.model;
+    this.$('soundhint').textContent = `🔈 ${ui.soundHint}`;
     const first = this.content.shots.title;
     const poster = clear(this.$('poster'));
+    const posterAuto = el('button', { type: 'button', class: 'p-auto', role: 'switch', onClick: (e) => { e.stopPropagation(); this.toggleAutoplay(); } }, el('i'), el('span', { text: ui.autoplayPoster }));
     poster.append(
       el('div', { class: 'p-kicker', text: first.kicker }),
       el('h1', { text: first.title }),
       el('p', { text: first.text }),
       el('button', { type: 'button', class: 'p-play', onClick: (e) => { e.stopPropagation(); this.start(); } }, el('i', { text: '▶' }), el('span', { text: `${ui.start} · ${fmtTime(TOTAL)}` })),
       el('div', { class: 'p-links' }, ...this.destinations().map((d) => el('a', { href: d.href, onClick: (e) => e.stopPropagation(), text: d.label }))),
+      posterAuto,
       el('small', { text: ui.startHint }),
     );
     const c = clear(this.$('controls'));
@@ -211,6 +218,7 @@ class Film {
         this.refs.time,
         el('div', { class: 'parts' }, ...this.refs.parts),
         el('span', { class: 'grow' }),
+        (this.refs.auto = el('button', { type: 'button', class: 'cb auto', onClick: () => this.toggleAutoplay(), text: ui.autoplay })),
         (this.refs.voice = el('button', { type: 'button', class: 'cb voice', onClick: () => this.toggleVoice(), text: ui.voice })),
         (this.refs.sound = el('button', { type: 'button', class: 'cb sound', onClick: () => this.toggleSound(), text: '♪' })),
         el('button', { type: 'button', class: 'cb', title: ui.language, onClick: () => this.toggleLanguage(), text: this.lang === 'id' ? 'ID' : 'EN' }),
@@ -230,7 +238,9 @@ class Film {
     const end = () => (this.scrubbing = false);
     track.addEventListener('pointerup', end);
     track.addEventListener('pointercancel', end);
+    this.refs.posterAuto = posterAuto;
     this.syncSound();
+    this.syncAutoplay();
     this.capKey = null;
     this.shotIndex = -1; // teks shot dibangun ulang pada frame berikutnya
   }
@@ -245,6 +255,26 @@ class Film {
     v.classList.toggle('off', !on);
     v.title = `${on ? ui.voiceOff : ui.voiceOn} (N)`;
     v.setAttribute('aria-pressed', String(on));
+  }
+  // Suara masih dikunci browser: video berputar sendiri (putar otomatis) sebelum ada klik atau tombol
+  soundLocked() {
+    return this.audio.available && this.audio.mix?.ctx.state !== 'running';
+  }
+  syncAutoplay() {
+    const ui = this.content.ui, on = this.autoplay;
+    for (const b of [this.refs.auto, this.refs.posterAuto]) {
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+      b.setAttribute('aria-checked', String(on));
+    }
+    this.refs.auto.title = `${on ? ui.autoplayOff : ui.autoplayOn} (A)`;
+  }
+  toggleAutoplay() {
+    this.autoplay = !this.autoplay;
+    try {
+      localStorage.setItem('itj-film-autoplay', this.autoplay ? '1' : '0');
+    } catch {}
+    this.syncAutoplay();
   }
   toggleVoice() {
     this.audio.unlock();
@@ -278,12 +308,18 @@ class Film {
     };
     this.wake = wake;
     window.addEventListener('pointermove', () => this.wakeUi());
-    window.addEventListener('pointerdown', wake);
+    window.addEventListener('pointerdown', () => {
+      this.firstGesture = this.soundLocked(); // klik yang membuka kunci suara tidak ikut menjeda video
+      wake();
+    });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) this.audio.update(this.t, false); // tab disembunyikan: suara ikut berhenti
       else this.lastFrame = performance.now(); // kembali ke tab: lanjut dari posisi terakhir, tanpa melompat
     });
-    this.$('stage').addEventListener('click', () => (this.started ? this.toggle() : this.start()));
+    this.$('stage').addEventListener('click', () => {
+      if (this.firstGesture && this.started && this.playing) return (this.firstGesture = false); // jangan jeda: klik ini untuk suara
+      this.started ? this.toggle() : this.start();
+    });
     window.addEventListener('keydown', (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key, low = k.toLowerCase();
@@ -291,6 +327,7 @@ class Film {
         e.preventDefault();
         wake();
       };
+      if (low === 'a') return done(), this.toggleAutoplay();
       if (k === ' ' || low === 'k' || k === 'Enter') return done(), this.started ? this.toggle() : this.start();
       if (k === 'ArrowRight' || k === 'PageDown') return done(), this.skip(1);
       if (k === 'ArrowLeft' || k === 'PageUp') return done(), this.skip(-1);
@@ -515,7 +552,6 @@ class Film {
     cap.style.opacity = String(Math.min(capIn, capOut));
     cap.style.transform = `translateY(${((1 - capIn * capIn * (3 - 2 * capIn)) * 18).toFixed(1)}px)`;
     document.body.dataset.kind = shot.layout || shot.kind;
-    this.$('modelnote').style.opacity = is3d ? '1' : '0';
 
     // Label yang menempel pada objek 3D
     if (this.labels.length) {
@@ -550,6 +586,7 @@ class Film {
     this.audio.update(this.t, this.playing && !this.scrubbing);
     document.body.classList.toggle('paused', this.started && !this.playing && !this.scrubbing);
     document.body.classList.toggle('ended', this.ended);
+    document.body.classList.toggle('needsound', this.started && this.playing && !this.audio.muted && this.soundLocked());
     if (!this.playing) document.body.classList.remove('idle');
     requestAnimationFrame((ts2) => this.frame(ts2));
   }

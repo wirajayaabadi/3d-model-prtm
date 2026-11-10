@@ -67,3 +67,38 @@ describe('matematika tangki', () => {
     expect(sloshOmega(8.4, 1.2)).toBeLessThan(sloshOmega(2, 1.2));
   });
 });
+
+
+describe('SPBU: truk tidak menabrak apa pun saat masuk', () => {
+  it('badan truk bebas dari pulau pompa, toko, tiang dan pagar semak, dan berhenti di dalam area bongkar', async () => {
+    const { PLAN: P, TRUCK_BODY: T, tripLateral } = await import('../src/presentation/scenes/spbuPlan.js');
+    const roadZ = 4, startX = 258; // jalan keluar terminal 4 m di selatan pusat SPBU; gerbang 258 m di timurnya
+    const rect = (x0, x1, z0, z1) => ({ x0, x1, z0, z1 });
+    const obstacles = [
+      ...P.islands.map((z) => rect(P.island.x0 - 0.7, P.island.x1 + 0.7, z - P.island.halfWidth - 0.15, z + P.island.halfWidth + 0.15)),
+      rect(P.shop.cx - P.shop.w / 2, P.shop.cx + P.shop.w / 2, P.shop.cz - P.shop.d / 2, P.shop.cz + P.shop.d / 2),
+      rect(P.pylon.x - 0.7, P.pylon.x + 0.7, P.pylon.z - 0.5, P.pylon.z + 0.5),
+      rect(P.hedge.x0, P.hedge.x1, P.hedge.z - P.hedge.halfDepth, P.hedge.z + P.hedge.halfDepth),
+    ];
+    const z = (lx) => tripLateral(lx, roadZ, startX);
+    let maxTurn = 0;
+    for (let lx = 80; lx >= P.stopX; lx -= 0.25) {
+      const heading = Math.atan2(z(lx - 0.1) - z(lx + 0.1), -0.2); // arah gerak: ke barat
+      const fx = Math.cos(heading), fz = Math.sin(heading);
+      maxTurn = Math.max(maxTurn, Math.abs(Math.atan2(fz, -fx)));
+      for (let a = -T.rear; a <= T.front; a += 0.5) for (const side of [-T.halfWidth, 0, T.halfWidth]) {
+        const px = lx + fx * a - fz * side, pz = z(lx) + fz * a + fx * side;
+        for (const o of obstacles) expect(px > o.x0 && px < o.x1 && pz > o.z0 && pz < o.z1, `truk menyentuh benda di lx ${px.toFixed(1)}, lz ${pz.toFixed(1)}`).toBe(false);
+        // di utara tepi jalan, truk hanya boleh berada di bukaan masuk atau di pelataran di belakang pagar semak
+        if (pz < P.slab.z1 && pz > P.hedge.z - P.hedge.halfDepth) expect(px > P.entry.x0 && px < P.entry.x1, `truk memotong tepi di lx ${px.toFixed(1)}`).toBe(true);
+      }
+    }
+    expect(maxTurn).toBeLessThan((25 * Math.PI) / 180); // belokan landai untuk truk 12 m
+    expect(z(P.stopX)).toBeCloseTo(P.laneZ, 6);
+    expect(P.stopX - T.front).toBeGreaterThan(P.bay.x0);
+    expect(P.stopX + T.rear).toBeLessThan(P.bay.x1);
+    expect(P.laneZ - T.halfWidth).toBeGreaterThan(P.bay.z0);
+    expect(P.laneZ + T.halfWidth).toBeLessThan(P.bay.z1);
+    expect(P.bay.z0).toBeGreaterThan(P.canopy.cz + P.canopy.d / 2); // area bongkar di luar kanopi
+  });
+});

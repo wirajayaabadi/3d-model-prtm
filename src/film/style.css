@@ -24,7 +24,7 @@ body.prestart #dip { opacity: .66 !important; }
 
 /* Teks shot */
 #caption { position: absolute; left: 6vw; right: 6vw; bottom: calc(92px + 5vh); display: grid; gap: 1.3vh; justify-items: start; pointer-events: none; text-shadow: 0 2px 18px rgba(8,18,31,.55); will-change: transform, opacity; }
-body.prestart #caption, body.prestart #modelnote, body.prestart #labels { display: none; }
+body.prestart #caption, body.prestart #labels { display: none; }
 #caption .c-kicker { display: flex; align-items: center; gap: 12px; font-size: clamp(12px, 1.05vw, 16px); font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #bfe0ff; }
 #caption .c-kicker::before { content: ''; width: 44px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--red), var(--blue) 55%, var(--green)); }
 #caption .c-step { font-size: clamp(13px, 1.1vw, 17px); font-weight: 700; color: var(--soft); letter-spacing: .06em; }
@@ -69,9 +69,10 @@ body.prestart #caption, body.prestart #modelnote, body.prestart #labels { displa
 .f-label.l.d i { transform: scale(-1, -1); }
 
 /* Catatan tetap */
-#disclaimer, #modelnote { position: absolute; top: 16px; padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.88); background: rgba(8,18,31,.42); backdrop-filter: blur(6px); pointer-events: none; }
+#disclaimer { position: absolute; top: 16px; padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.88); background: rgba(8,18,31,.42); backdrop-filter: blur(6px); pointer-events: none; }
 #disclaimer { right: 16px; }
-#modelnote { left: 16px; opacity: 0; transition: opacity .4s; }
+#soundhint { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff; background: rgba(8,18,31,.62); backdrop-filter: blur(6px); pointer-events: none; opacity: 0; transition: opacity .4s; white-space: nowrap; }
+body.needsound #soundhint { opacity: 1; }
 
 /* Poster sebelum diputar */
 #poster { position: absolute; inset: 0; display: none; align-content: center; justify-items: center; gap: 1.6vh; text-align: center; padding: 0 6vw; cursor: pointer; }
@@ -86,6 +87,12 @@ body.prestart #poster { display: grid; }
 #poster .p-links { display: flex; gap: 10px; margin-top: 1.2vh; }
 #poster .p-links a { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.08); font-size: 14px; font-weight: 700; text-decoration: none; }
 #poster .p-links a:hover { background: rgba(255,255,255,.22); }
+#poster .p-auto { display: inline-flex; align-items: center; gap: 10px; margin-top: .6vh; padding: 6px 10px; border: 0; border-radius: 999px; background: none; color: #dbe7f3; font-size: 14px; font-weight: 700; }
+#poster .p-auto:hover { background: rgba(255,255,255,.1); }
+#poster .p-auto i { position: relative; width: 34px; height: 20px; border-radius: 999px; background: rgba(255,255,255,.28); transition: background .2s; }
+#poster .p-auto i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .2s; }
+#poster .p-auto.on i { background: var(--blue); }
+#poster .p-auto.on i::after { transform: translateX(14px); }
 
 /* Kontrol */
 #controls { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 22px 14px; display: grid; gap: 8px; background: linear-gradient(0deg, rgba(8,18,31,.86), rgba(8,18,31,0)); transition: opacity .35s; z-index: 5; }
@@ -120,6 +127,8 @@ body.ended #controls .go.replay { display: inline-flex; }
 #controls .cb.sound.off { color: rgba(255,255,255,.45); }
 #controls .cb.sound.off::after { content: ''; position: absolute; left: 7px; right: 7px; top: 50%; height: 2px; background: #fff; transform: rotate(-38deg); }
 #controls .cb.voice.off { color: rgba(255,255,255,.45); text-decoration: line-through; }
+#controls .cb.auto { color: rgba(255,255,255,.55); }
+#controls .cb.auto.on { color: #fff; background: var(--blue); border-color: var(--blue); }
 #controls .cb[hidden] { display: none; }
 #controls .cb.play { width: 44px; height: 40px; background: #fff; color: var(--ink); border-color: #fff; font-size: 14px; }
 #controls .time { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--soft); min-width: 86px; }

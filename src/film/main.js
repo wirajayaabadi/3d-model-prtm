@@ -16,12 +16,20 @@ import { buildSpbu } from '../presentation/scenes/spbu.js';
 import { buildHighlights } from '../presentation/scenes/highlights.js';
 import { buildTruckShow } from '../presentation/scenes/truckShow.js';
 import { CONTENT } from './content.js';
-import { SHOTS, TOTAL, PARTS, FADE, DIP, VISIT_STEPS, locate, partStart, fmtTime, labelDelay } from './shots.js';
+import { SHOTS, TOTAL, PARTS, FADE, BAR, VISIT_STEPS, locate, partStart, fmtTime, labelDelay } from './shots.js';
 import { Soundtrack } from './audio.js';
 
 const SEED = 20261025;
 const SIM_SPEED = 2;
 const FOG = { terminal: [700, 1900], map: [2400, 6500], truck: [70, 330] };
+// Cahaya per adegan, mengikuti alur video referensi: pagi → siang → sore → senja. `pos` adalah letak matahari
+// relatif terhadap pusat terminal; `css` adalah langit di belakang kanvas.
+const LIGHT = {
+  dawn: { sun: '#FFAE80', sunI: 2.7, pos: [245, 70, -115], sky: '#E9A995', ground: '#6F83A0', hemiI: 0.92, exposure: 0.98, fog: '#E7AE96', css: 'linear-gradient(180deg, #343a63 0%, #86628a 26%, #ef9f7c 56%, #f6cfae 100%)' },
+  day: { sun: '#FFF0DA', sunI: 3.3, pos: [150, 170, -160], sky: '#EDF2F7', ground: '#A9BAC6', hemiI: 1.45, exposure: 1.1, fog: '#E4E7E6', css: 'linear-gradient(180deg, #8fbde6 0%, #c9dff2 42%, #eef1f1 100%)' },
+  gold: { sun: '#FFD3A6', sunI: 3.1, pos: [115, 100, -225], sky: '#F3D0B5', ground: '#9FB8C8', hemiI: 1.32, exposure: 1.1, fog: '#E6D5C8', css: 'linear-gradient(180deg, #f3bf92 0%, #f1d2bd 22%, #cfdcec 52%, #e3e9ee 78%, #e6ddd2 100%)' },
+  dusk: { sun: '#FF9A68', sunI: 2.5, pos: [-250, 66, -95], sky: '#E7B1A2', ground: '#7C8CA6', hemiI: 1.05, exposure: 1.0, fog: '#D99A80', css: 'linear-gradient(180deg, #1f2444 0%, #5c4170 30%, #d9765a 62%, #f2b28a 100%)' },
+};
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const lerp = (a, b, k) => a + (b - a) * k;
 
@@ -54,6 +62,7 @@ class Film {
     this.lastFrame = performance.now();
     this.v = new THREE.Vector3();
     this.audio = new Soundtrack();
+    this.audio.preload(); // musik latar didekode sambil adegan 3D disiapkan
     this.buildChrome();
     this.preload().then(() => this.initScene());
   }
@@ -100,7 +109,9 @@ class Film {
     this.truck = buildTruckShow({ M, products: config.products });
     this.truck.showMarkers(false);
     this.truck.group.visible = false;
-    scene.add(far, this.map.group, this.spbu.group, this.hl.group, this.truck.group);
+    scene.add(far, this.map.group, this.spbu.group, this.hl.group, this.truck.group, this.buildRoutes());
+    this.sunTarget = this.view.sun.target.position.clone();
+    this.hemi = scene.children.find((o) => o.isHemisphereLight);
     this.view.resize();
     this.installInput();
     const at = parseFloat(this.params.get('t'));
@@ -111,6 +122,39 @@ class Film {
     this.$('loading').classList.add('done');
     document.body.classList.toggle('prestart', !this.started);
     requestAnimationFrame((ts) => this.frame(ts));
+  }
+
+  // Garis rute merah dari ITJ ke kota-kota wilayah layanan (seperti grafik rute di video referensi); digambar bertahap
+  buildRoutes() {
+    const g = new THREE.Group(), H = 3.8;
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff4b3e, toneMapped: false, fog: false });
+    const from = this.map.pins.itj.pos.clone().setY(H);
+    const SEG = 40, RAD = 6;
+    this.routes = Object.values(this.map.pins.serviceArea).map((p, n) => {
+      const to = p.clone().setY(H), mid = from.clone().add(to).multiplyScalar(0.5);
+      mid.y += 3 + from.distanceTo(to) * 0.4;
+      const mesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(from, mid, to), SEG, 0.3, RAD, false), mat);
+      mesh.geometry.setDrawRange(0, 0);
+      g.add(mesh);
+      return { mesh, per: RAD * 6, seg: SEG, delay: n * 0.07 };
+    });
+    g.visible = false;
+    this.routeGroup = g;
+    return g;
+  }
+  applyLight(name) {
+    const L = LIGHT[name] || LIGHT.gold, { sun, scene, renderer } = this.view;
+    sun.color.set(L.sun);
+    sun.intensity = L.sunI;
+    sun.position.copy(this.sunTarget).add(this.v.set(...L.pos));
+    if (this.hemi) {
+      this.hemi.color.set(L.sky);
+      this.hemi.groundColor.set(L.ground);
+      this.hemi.intensity = L.hemiI;
+    }
+    renderer.toneMappingExposure = L.exposure;
+    scene.fog.color.set(L.fog);
+    this.$('stage').style.background = L.css;
   }
 
   fail() {
@@ -181,6 +225,7 @@ class Film {
     track.addEventListener('pointerup', end);
     track.addEventListener('pointercancel', end);
     this.syncSound();
+    this.capKey = null;
     this.shotIndex = -1; // teks shot dibangun ulang pada frame berikutnya
   }
   syncSound() {
@@ -218,7 +263,10 @@ class Film {
     this.wake = wake;
     window.addEventListener('pointermove', () => this.wakeUi());
     window.addEventListener('pointerdown', wake);
-    document.addEventListener('visibilitychange', () => document.hidden && this.audio.update(this.t, false)); // tab disembunyikan: suara ikut berhenti
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.audio.update(this.t, false); // tab disembunyikan: suara ikut berhenti
+      else this.lastFrame = performance.now(); // kembali ke tab: lanjut dari posisi terakhir, tanpa melompat
+    });
     this.$('stage').addEventListener('click', () => (this.started ? this.toggle() : this.start()));
     window.addEventListener('keydown', (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -281,27 +329,37 @@ class Film {
   // ---------- Shot ----------
   enterShot(i) {
     this.shotIndex = i;
-    const shot = SHOTS[i], data = this.content.shots[shot.id] || {};
-    const cap = clear(this.$('caption'));
-    cap.className = `layout-${shot.layout || (shot.kind === 'photo' ? 'photo' : 'lower')}`;
-    const step = VISIT_STEPS.indexOf(shot.id);
-    if (step >= 0) cap.append(el('div', { class: 'c-step' }, el('b', { text: String(step + 1).padStart(2, '0') }), ` ${this.content.ui.stepOf} ${VISIT_STEPS.length}`));
-    if (data.kicker) cap.append(el('div', { class: 'c-kicker', text: data.kicker }));
-    if (data.title) cap.append(el('h2', { text: data.title }));
-    if (data.stats) cap.append(el('div', { class: 'c-stats' }, ...data.stats.map(([v, l]) => el('div', { class: 'c-stat' }, el('b', { text: v }), el('span', { text: l })))));
-    if (data.text) cap.append(el('p', { text: data.text }));
-    if (data.credit) cap.append(el('small', { text: data.credit }));
+    const shot = SHOTS[i];
+    // Teks hanya dibangun ulang bila kelompok teksnya berganti; potongan gambar di dalam satu kelompok tidak mengusiknya
+    if (this.capKey !== shot.cap) {
+      this.capKey = shot.cap;
+      const data = this.content.shots[shot.cap] || {};
+      const cap = clear(this.$('caption'));
+      cap.className = `layout-${shot.layout || (shot.kind === 'photo' ? 'photo' : 'lower')}`;
+      const step = VISIT_STEPS.indexOf(shot.id);
+      if (step >= 0) cap.append(el('div', { class: 'c-step' }, el('b', { text: String(step + 1).padStart(2, '0') }), ` ${this.content.ui.stepOf} ${VISIT_STEPS.length}`));
+      if (data.kicker) cap.append(el('div', { class: 'c-kicker', text: data.kicker }));
+      if (data.title) cap.append(el('h2', { text: data.title }));
+      if (data.stats) cap.append(el('div', { class: 'c-stats' }, ...data.stats.map(([v, l]) => el('div', { class: 'c-stat' }, el('b', { text: v }), el('span', { text: l })))));
+      if (data.text) cap.append(el('p', { text: data.text }));
+      if (data.credit) cap.append(el('small', { text: data.credit }));
+    }
+    // Tag miring pada objek 3D: judul + keterangan kecil, dengan garis penunjuk
     const box = clear(this.$('labels'));
-    this.labels = (shot.labels || []).map(([key, at, delay], n) => {
-      const node = el('div', { class: 'f-label' }, el('span', { text: this.content.labels[key] }), el('i'));
+    this.labels = (shot.labels || []).map(([key, at, delay, side = ''], n) => {
+      const [title, sub] = this.content.labels[key];
+      const tag = el('div', { class: 'tag' }, el('b', { text: title }), sub ? el('span', { text: sub }) : null);
+      const node = el('div', { class: `f-label ${side}` }, tag, el('i'));
       box.append(node);
-      return { node, at, delay: labelDelay(n, delay) };
+      return { node, tag, at, delay: labelDelay(n, delay) };
     });
   }
 
   // Keadaan adegan 3D untuk satu shot: atap, sorotan, kabut, panggung truk, perjalanan ke SPBU
   applyScene(shot) {
     this.applied3d = shot;
+    this.applyLight(shot.light);
+    this.routeGroup.visible = !!shot.routes;
     this.view.setMode(shot.mode || 'operation');
     this.hl.show(shot.highlight || []);
     const fog = FOG[shot.world] || FOG.terminal;
@@ -355,7 +413,7 @@ class Film {
 
   // ---------- Frame ----------
   frame(ts) {
-    const real = Math.min(0.5, (ts - this.lastFrame) / 1000); // waktu video mengikuti jam, juga saat frame lambat
+    const real = Math.min(1.5, (ts - this.lastFrame) / 1000); // waktu video mengikuti jam (dan musik), juga saat frame tersendat
     const dt = Math.min(0.1, real); // langkah simulasi dan animasi dibatasi agar tidak melompat
     this.lastFrame = ts;
     if (this.playing && !this.scrubbing) {
@@ -371,7 +429,7 @@ class Film {
     }
     const { i, shot, local, p } = locate(this.t);
     if (i !== this.shotIndex) this.enterShot(i);
-    const prev = SHOTS[i - 1], next = SHOTS[i + 1];
+    const prev = SHOTS[i - 1];
     const is3d = shot.kind === '3d';
     const moving = this.playing && !this.scrubbing;
 
@@ -387,9 +445,12 @@ class Film {
         this.truck.update(moving ? dt : 0);
       }
       if (under.trip) {
-        const k = clamp01(p3), ease = 1 - (1 - k) * (1 - k);
+        const k = clamp01(p3), ease = under.tripEase ? 1 - (1 - k) * (1 - k) : k; // hanya shot kedatangan yang melambat
         this.spbu.trip.s = lerp(under.trip[0], under.trip[1], ease) * this.spbu.trip.length;
         this.spbu.update(0);
+      }
+      if (under.routes) {
+        for (const r of this.routes) r.mesh.geometry.setDrawRange(0, Math.floor(clamp01(p3 * 1.9 - 0.12 - r.delay) * r.seg) * r.per);
       }
       const e = this.engine;
       let alpha = 1;
@@ -422,21 +483,21 @@ class Film {
     this.photo('photoA', prevPhoto && local < FADE ? prevPhoto : null, prevPhoto ? 1 + local / prevPhoto.dur : 0, is3d ? 1 - fadeIn : 1);
     this.photo('photoB', is3d ? null : shot, p, fadeIn);
 
-    // Gelap sesaat di antara dua adegan 3D, dan saat video dibuka
+    // Adegan 3D berganti dengan potongan langsung tepat di ketukan. Gelap hanya saat video dibuka (muncul dari
+    // hitam) dan di birama terakhir (meredup ke hitam, teks penutup tetap terbaca).
+    const last = i === SHOTS.length - 1;
     let dip = 0;
-    if (is3d && next?.kind === '3d') dip = Math.max(dip, clamp01((local - (shot.dur - DIP)) / DIP));
-    if (is3d && prev?.kind === '3d') dip = Math.max(dip, clamp01(1 - local / DIP));
-    if (i === 0) dip = Math.max(dip, clamp01(1 - local / 0.7));
+    if (i === 0) dip = clamp01(1 - local / 1.4);
+    if (last) dip = Math.max(dip, clamp01((local - (shot.dur - BAR)) / BAR) * 0.82);
     this.$('dip').style.opacity = String(dip);
 
-    // Teks shot
-    const last = i === SHOTS.length - 1;
-    const capIn = clamp01((local - 0.35) / 0.6), capOut = last ? 1 : clamp01((shot.dur - local - 0.1) / 0.45);
+    // Teks: muncul di awal kelompok teks, hilang di akhirnya
+    const capIn = clamp01((this.t - shot.capStart - 0.2) / 0.45), capOut = last ? 1 : clamp01((shot.capEnd - this.t - 0.08) / 0.4);
     const cap = this.$('caption');
     cap.style.opacity = String(Math.min(capIn, capOut));
     cap.style.transform = `translateY(${((1 - capIn * capIn * (3 - 2 * capIn)) * 18).toFixed(1)}px)`;
     document.body.dataset.kind = shot.layout || shot.kind;
-    this.$('modelnote').style.opacity = String(is3d ? Math.min(capIn, capOut) : 0);
+    this.$('modelnote').style.opacity = is3d ? '1' : '0';
 
     // Label yang menempel pada objek 3D
     if (this.labels.length) {
@@ -448,8 +509,9 @@ class Film {
         else this.v.copy(pos);
         this.v.project(cam);
         const on = this.v.z < 1 && Math.abs(this.v.x) < 1 && Math.abs(this.v.y) < 1;
-        const o = on ? Math.min(clamp01((local - l.delay) / 0.5), clamp01((shot.dur - local - 0.3) / 0.4)) : 0;
+        const k = clamp01((local - l.delay) / 0.45), o = on ? Math.min(k > 0 ? 1 : 0, clamp01((shot.dur - local - 0.15) / 0.3)) : 0;
         l.node.style.opacity = String(o);
+        l.tag.style.clipPath = `inset(-20% ${((1 - k * k * (3 - 2 * k)) * 100).toFixed(1)}% -20% -20%)`; // tag tersapu masuk dari kiri
         if (on) l.node.style.transform = `translate(${((this.v.x * 0.5 + 0.5) * w).toFixed(1)}px,${((-this.v.y * 0.5 + 0.5) * h).toFixed(1)}px)`;
       }
     }

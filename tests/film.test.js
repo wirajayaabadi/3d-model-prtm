@@ -1,9 +1,9 @@
 // Halaman video: garis waktu utuh, teks dua bahasa lengkap, dan foto yang dirujuk memang ada.
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
-import { SHOTS, TOTAL, PARTS, VISIT_STEPS, locate, partStart, fmtTime } from '../src/film/shots.js';
+import { SHOTS, TOTAL, TOTAL_BARS, BAR, BPM, LEAD, MUSIC, PARTS, VISIT_STEPS, locate, partStart, fmtTime } from '../src/film/shots.js';
 import { CONTENT } from '../src/film/content.js';
-import { sectionAt, bedLevels, Soundtrack } from '../src/film/audio.js';
+import { bedLevels, Soundtrack } from '../src/film/audio.js';
 
 describe('garis waktu video', () => {
   it('shot bersambung tanpa celah dan bagian berurutan', () => {
@@ -16,9 +16,44 @@ describe('garis waktu video', () => {
       at += s.dur;
     }
     expect(TOTAL).toBeCloseTo(at, 6);
-    expect(TOTAL).toBeGreaterThan(120);
-    expect(TOTAL).toBeLessThan(200);
+    expect(TOTAL).toBeCloseTo(LEAD + TOTAL_BARS * BAR, 6);
     expect(PARTS.map((_, i) => partStart(i))).toEqual([...PARTS.map((_, i) => partStart(i))].sort((a, b) => a - b));
+  });
+  it('setiap potongan jatuh di awal birama musik latar (120 BPM, ketukan pertama di detik 1,79)', () => {
+    expect(BPM).toBe(120);
+    expect(BAR).toBe(2);
+    expect(LEAD).toBeCloseTo(1.79, 6);
+    expect(SHOTS[0].start).toBe(0); // frame judul tampil sejak nada pembuka
+    for (const s of SHOTS.slice(1)) {
+      expect(Number.isInteger(s.bars) && s.bars >= 2).toBe(true);
+      expect((s.start - LEAD) / BAR).toBeCloseTo(s.bar, 6);
+    }
+  });
+  it('video selesai bersama lagu dan bagian video berganti di batas bagian lagu', () => {
+    const TRACK_SECONDS = 153.88, LAST_SOUND = 149.7; // panjang berkas dan saat gema terakhir padam (diukur dari rekaman)
+    expect(TOTAL).toBeLessThan(TRACK_SECONDS);
+    expect(Math.abs(TOTAL - LAST_SOUND)).toBeLessThan(1);
+    const bar = (id) => SHOTS.find((s) => s.id === id).bar;
+    expect(bar('supply')).toBe(MUSIC.drums); // drum masuk saat garis rute digambar
+    expect(bar('truck')).toBe(MUSIC.calm); // bagian tenang: truk tembus pandang
+    expect(bar('trip')).toBe(MUSIC.build);
+    expect(bar('v.health')).toBe(MUSIC.drums2); // drum kembali di tengah foto kunjungan
+    expect(bar('thanks')).toBe(MUSIC.outro);
+    expect(bar('end')).toBeLessThan(MUSIC.final);
+    expect(TOTAL_BARS).toBeGreaterThan(MUSIC.final); // akor terakhir berdengung di kartu penutup
+  });
+  it('kelompok teks berurutan dan mencakup seluruh shot anggotanya', () => {
+    const seen = new Set();
+    let last = null;
+    for (const s of SHOTS) {
+      if (s.cap !== last) {
+        expect(seen.has(s.cap), `kelompok ${s.cap} terpecah`).toBe(false);
+        seen.add(s.cap);
+        last = s.cap;
+      }
+      expect(s.capStart).toBeLessThanOrEqual(s.start + 1e-9);
+      expect(s.capEnd).toBeGreaterThanOrEqual(s.start + s.dur - 1e-9);
+    }
   });
   it('locate mengembalikan shot dan kemajuan yang benar di tepi garis waktu', () => {
     expect(locate(-5).i).toBe(0);
@@ -48,8 +83,8 @@ describe('garis waktu video', () => {
   it('teks tersedia di kedua bahasa untuk setiap shot, label dan bagian', () => {
     for (const c of Object.values(CONTENT)) {
       for (const s of SHOTS) {
-        expect(c.shots[s.id]?.title, `${c.code} ${s.id}`).toBeTruthy();
-        for (const [key] of s.labels || []) expect(c.labels[key], `${c.code} label ${key}`).toBeTruthy();
+        expect(c.shots[s.cap]?.title, `${c.code} ${s.cap}`).toBeTruthy();
+        for (const [key] of s.labels || []) expect(c.labels[key]?.[0], `${c.code} label ${key}`).toBeTruthy();
       }
       for (const p of PARTS) expect(c.ui.parts[p]).toBeTruthy();
       expect(c.ui.disclaimer).toBeTruthy();
@@ -60,21 +95,14 @@ describe('garis waktu video', () => {
 });
 
 describe('suara video', () => {
-  it('tekstur musik berganti di batas bagian video', () => {
-    expect(sectionAt(0)).toBe('intro');
-    expect(sectionAt(SHOTS.find((s) => s.id === 'where').start + 0.1)).toBe('map');
-    expect(sectionAt(SHOTS.find((s) => s.id === 'aerial').start + 0.1)).toBe('full');
-    expect(sectionAt(partStart(1) + 0.1)).toBe('visit');
-    expect(sectionAt(partStart(2) + 0.1)).toBe('closing');
-  });
   it('deru mesin hanya pada adegan truk dan mereda saat truk tiba di SPBU', () => {
     const at = (id, p) => { const s = SHOTS.find((x) => x.id === id); return bedLevels(s.start + s.dur * p); };
     expect(at('truck', 0.5).engine).toBe(1);
     expect(at('trip', 0.3).engine).toBe(1);
     expect(at('trip', 0.98).engine).toBeLessThan(0.4);
-    expect(at('v.opening', 0.5)).toMatchObject({ engine: 0, amb: 0 });
+    expect(at('v.opening', 0.5).engine).toBe(0);
     expect(at('where', 0.5).engine).toBe(0);
-    expect(at('storage', 0.5).amb).toBe(1);
+    expect(at('storage', 0.5)).toEqual({ engine: 0, pitch: 0.62 }); // adegan 3D tanpa truk: tidak ada derau latar
   });
   it('tanpa Web Audio (mis. di Node) soundtrack diam tanpa galat', () => {
     const s = new Soundtrack();

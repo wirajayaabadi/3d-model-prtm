@@ -6,6 +6,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { boxGeo, cylGeo, canvasTexture, print, screenMaterial } from '../materials.js';
 import { BRAND, hexToInt } from '../../ui/theme.js';
 import { getTruckModel } from './truckModels.js';
+import { logoGeometry, logoMaterial } from './brandLogo.js';
 
 const bodyCache = new Map(); // productColor -> BufferGeometry
 let chromeGeo = null;
@@ -76,7 +77,19 @@ function placardMat(hex) {
   return placardMats.get(hex);
 }
 
-// Truk dari model referensi (bila sudah dimuat): satu mesh berwarna vertex + plat ID + placard produk + lampu.
+// Stiker logo di kedua sisi tangki, di depan plat ID; satu geometri per model, dibagi semua truk.
+const logoCache = new Map();
+function tankLogoGeometry(modelId, tank, px, py, pz) {
+  if (!logoCache.has(modelId)) {
+    const from = px + 1.3; // tepi depan plat ID + jarak
+    const width = Math.max(1.2, Math.min(2.5, tank.x1 - 0.45 - from));
+    const x = from + width / 2;
+    logoCache.set(modelId, logoGeometry([{ x, y: py, z: pz + 0.005, width }, { x, y: py, z: -pz - 0.005, width, ry: Math.PI }]));
+  }
+  return logoCache.get(modelId);
+}
+
+// Truk dari model referensi (bila sudah dimuat): satu mesh berwarna vertex + plat ID + placard produk + logo + lampu.
 function createModelTruck({ id, label, productColor, M, renderer, model }) {
   const { bodyMat } = mats(M);
   const x = model.extras || {};
@@ -116,6 +129,9 @@ function createModelTruck({ id, label, productColor, M, renderer, model }) {
   const placard = new THREE.Mesh(q, pmat);
   placard.userData = g.userData;
   g.add(placard);
+  const logo = new THREE.Mesh(tankLogoGeometry(model.id, tank, px, py, pz), logoMaterial());
+  logo.userData = g.userData;
+  g.add(logo);
   const brake = new THREE.Mesh(boxGeo(0.08, 0.22, 0.5, 0.02), M.brakeLight);
   brake.position.set(-rear - 0.05, 1.0, 0.85);
   brake.visible = false;

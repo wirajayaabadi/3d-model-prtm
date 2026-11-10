@@ -19,7 +19,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #fff; outline-offset:
 #scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(0deg, rgba(8,18,31,.9) 0%, rgba(8,18,31,.62) 20%, rgba(8,18,31,0) 50%), linear-gradient(180deg, rgba(8,18,31,.42) 0%, rgba(8,18,31,0) 16%); transition: background .4s; }
 body[data-kind='end'] #scrim { background: radial-gradient(ellipse at 50% 48%, rgba(8,18,31,.86) 0%, rgba(8,18,31,.74) 55%, rgba(8,18,31,.82) 100%); }
 body[data-kind='title'] #scrim { background: linear-gradient(90deg, rgba(8,18,31,.82) 0%, rgba(8,18,31,.45) 55%, rgba(8,18,31,.1) 100%), linear-gradient(0deg, rgba(8,18,31,.6) 0%, rgba(8,18,31,0) 40%); }
-#dip { position: absolute; inset: 0; background: var(--ink); opacity: 0; pointer-events: none; }
+#dip { position: absolute; inset: 0; background: #04090f; opacity: 0; pointer-events: none; }
 body.prestart #dip { opacity: .66 !important; }
 
 /* Teks shot */
@@ -48,15 +48,30 @@ body.prestart #caption, body.prestart #modelnote, body.prestart #labels { displa
 
 /* Label pada objek 3D */
 #labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.f-label { position: absolute; left: 0; top: 0; translate: -50% -100%; opacity: 0; display: grid; justify-items: center; will-change: transform, opacity; }
-.f-label span { padding: .42em .9em; border-radius: 999px; background: rgba(255,255,255,.96); color: var(--ink); font-size: clamp(12px, 1.05vw, 16px); font-weight: 800; white-space: nowrap; box-shadow: 0 8px 24px rgba(8,18,31,.35); }
-.f-label i { width: 2px; height: clamp(16px, 2.4vh, 28px); background: #fff; box-shadow: 0 0 6px rgba(8,18,31,.5); }
-.f-label i::after { content: ''; position: absolute; left: 50%; bottom: -5px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #fff; border: 2px solid var(--blue); box-sizing: border-box; }
+/* Tag miring biru dengan garis penunjuk tipis, mengikuti gaya keterangan pada video referensi */
+.f-label { position: absolute; left: 0; top: 0; translate: 0 -100%; opacity: 0; display: grid; justify-items: start; will-change: transform, opacity; }
+.f-label .tag { position: relative; display: grid; gap: .1em; margin-left: clamp(14px, 1.6vw, 26px); padding: .5em 1.3em .55em 1.1em; color: #fff; white-space: nowrap; }
+.f-label .tag::before { content: ''; position: absolute; inset: 0; transform: skewX(-16deg); background: linear-gradient(90deg, rgba(0,103,179,.94), rgba(0,146,214,.82)); border-left: 4px solid #fff; box-shadow: 0 10px 26px rgba(4,9,15,.4); }
+.f-label .tag b, .f-label .tag span { position: relative; }
+.f-label .tag b { font-size: clamp(13px, 1.25vw, 20px); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; line-height: 1.1; }
+.f-label .tag span { font-size: clamp(10.5px, .85vw, 13.5px); font-weight: 600; letter-spacing: .04em; color: #d6ecff; line-height: 1.15; }
+.f-label i { position: relative; width: clamp(14px, 1.6vw, 26px); height: clamp(18px, 2.8vh, 32px); }
+.f-label i::before { content: ''; position: absolute; left: 0; bottom: 0; width: 141%; height: 1.5px; background: #fff; transform-origin: left bottom; transform: rotate(-52deg); box-shadow: 0 0 6px rgba(4,9,15,.6); }
+.f-label i::after { content: ''; position: absolute; left: -4px; bottom: -4px; width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.3); }
+/* Arah tag: ke kiri (l), ke bawah (d) */
+.f-label.l { translate: -100% -100%; justify-items: end; }
+.f-label.l .tag { margin-left: 0; margin-right: clamp(14px, 1.6vw, 26px); }
+.f-label.l i { transform: scaleX(-1); }
+.f-label.d { translate: 0 0; }
+.f-label.d .tag { order: 2; }
+.f-label.d i { transform: scaleY(-1); }
+.f-label.l.d { translate: -100% 0; }
+.f-label.l.d i { transform: scale(-1, -1); }
 
 /* Catatan tetap */
 #disclaimer, #modelnote { position: absolute; top: 16px; padding: 5px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,.88); background: rgba(8,18,31,.42); backdrop-filter: blur(6px); pointer-events: none; }
 #disclaimer { right: 16px; }
-#modelnote { left: 16px; opacity: 0; }
+#modelnote { left: 16px; opacity: 0; transition: opacity .4s; }
 
 /* Poster sebelum diputar */
 #poster { position: absolute; inset: 0; display: none; align-content: center; justify-items: center; gap: 1.6vh; text-align: center; padding: 0 6vw; cursor: pointer; }

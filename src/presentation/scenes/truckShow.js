@@ -9,6 +9,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import bodyUrl from '../assets/truck-showcase-body.glb?url';
 import wheelUrl from '../assets/truck-showcase-wheel.glb?url';
 import { contactShadow } from '../../render/materials.js';
+import { logoMesh } from '../../render/assets/brandLogo.js';
 import { TRUCK } from '../world.js';
 import { solveSurface, heightFor, Slosh } from './tankMath.js';
 
@@ -252,6 +253,9 @@ export function buildTruckShow({ M, products }) {
   for (const l of [...liquids, merged]) truck.add(l.mesh);
   merged.mesh.visible = false;
   const MERGED_LEN = merged.len, COMP_LEN = COMPS.map(([a, b]) => b - a);
+
+  // Logo di kedua pintu kabin (dari berkas logo tim; teks dan logo bawaan model tidak dibawa saat bake)
+  truck.add(logoMesh([{ x: 5.78, y: 1.52, z: -1.2, width: 1.55, ry: Math.PI }, { x: 5.78, y: 1.52, z: 1.2, width: 1.55 }]));
 
   // Penanda titik berat muatan (demo guncangan)
   const comMarker = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.6, 20).rotateX(Math.PI), new THREE.MeshStandardMaterial({ color: 0xe31e2d, emissive: 0xe31e2d, emissiveIntensity: 0.5, roughness: 0.4 }));

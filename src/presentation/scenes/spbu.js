@@ -1,10 +1,12 @@
 // SPBU kecil di ujung jalan keluar terminal (ujung rantai nilai), jalan penghubung, dan truk "perjalanan"
-// untuk bab 6: keluar gerbang, menyusuri jalan, berhenti di pompa. Tanpa logo atau wordmark; identitas lewat warna.
+// untuk bab 6: keluar gerbang, menyusuri jalan, berhenti di pompa. Logo pada kanopi, tiang dan toko memakai berkas
+// logo tim sebagai stiker (render/assets/brandLogo.js); tidak digambar ulang di kode.
 import * as THREE from 'three';
 import { box, cyl, compact, contactShadow, stripGeometry } from '../../render/materials.js';
 import { createTruck, setTruckLights, WheelPool } from '../../render/assets/truck.js';
 import { getTruckModel, onTruckModelsReady } from '../../render/assets/truckModels.js';
 import { BRAND } from '../../ui/theme.js';
+import { logoMesh } from '../../render/assets/brandLogo.js';
 import { SPBU } from '../world.js';
 
 export function buildSpbu({ M, renderer, layout, config, scene }) {
@@ -60,6 +62,13 @@ export function buildSpbu({ M, renderer, layout, config, scene }) {
     statics.add(leaf);
   }
   compact(statics);
+  // Stiker logo: muka kanopi, kedua sisi kepala tiang, dan papan toko
+  group.add(logoMesh([
+    { x: C.x - 2, y: 6.05, z: C.z + 0.2, width: 3.0 },
+    { x: C.x + 15, y: 8.0, z: C.z - 12 + 0.3, width: 1.75 },
+    { x: C.x + 15, y: 8.0, z: C.z - 12 - 0.3, width: 1.75, ry: Math.PI },
+    { x: C.x - 2, y: 4.4, z: C.z - 14 + 3.23, width: 2.1 },
+  ]));
   shop.userData.cardKey = 'spbu';
   pylon.userData.cardKey = 'spbu';
 

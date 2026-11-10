@@ -670,7 +670,7 @@ export default {
     'bab2-peserta-apd': 'Peserta mendengarkan penjelasan operasi dengan helm dan sarung tangan.',
     'bab2-diskusi-kantor': 'Diskusi kelompok di ruang kerja ITJ.',
     'bab5-presentasi-tradeoff': 'Presentasi kelompok "Investment & Operational Trade-Off": 24 koneksi produk, US$1 juta per koneksi.',
-    'bab6-diskusi-manajemen': 'Diskusi penutup bersama manajemen ITJ.',
+    'bab6-diskusi-manajemen': 'Diskusi penutup bersama Mentor.',
   },
   truck: {
     xray: 'Tembus pandang',

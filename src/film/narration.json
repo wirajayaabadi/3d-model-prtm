@@ -15,7 +15,7 @@
     {"id": "v.start", "shot": "v.briefing", "delay": 0.5, "until": "v.health", "text": "Kami mengikuti pengarahan, lalu tekanan darah diperiksa sebelum masuk area operasi."},
     {"id": "v.safety", "shot": "v.induction", "delay": 0.5, "until": "v.ppe", "text": "Petugas memberi arahan keselamatan, dan kami mengenakan alat pelindung diri."},
     {"id": "v.field", "shot": "v.field", "delay": 0.5, "until": "v.walk", "text": "Di lapangan, kami mendengar penjelasan operasi sambil menyusuri area terminal."},
-    {"id": "v.close", "shot": "v.discussion", "delay": 1.5, "until": "v.closing", "text": "Kunjungan ditutup dengan diskusi kelompok, presentasi, dan diskusi bersama manajemen ITJ."},
+    {"id": "v.close", "shot": "v.discussion", "delay": 1.5, "until": "v.closing", "text": "Kunjungan ditutup dengan diskusi kelompok, presentasi, dan diskusi penutup bersama Mentor."},
     {"id": "thanks", "shot": "thanks", "delay": 0.9, "until": "thanks", "text": "Terima kasih, ITJ Plumpang, atas sambutan dan ilmunya."}
   ]
 }

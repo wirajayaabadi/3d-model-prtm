@@ -68,7 +68,7 @@ export const CONTENT = {
       'v.walk': { title: 'Menyusuri terminal', text: 'Peserta berjalan di area terminal.' },
       'v.discussion': { title: 'Diskusi kelompok', text: 'Diskusi kelompok di ruang kerja ITJ.' },
       'v.presentation': { title: 'Presentasi kelompok', text: 'Kelompok memaparkan hasil diskusinya.' },
-      'v.closing': { title: 'Diskusi penutup', text: 'Diskusi penutup bersama manajemen ITJ.' },
+      'v.closing': { title: 'Diskusi penutup', text: 'Diskusi penutup bersama Mentor.' },
       thanks: { kicker: 'Terima kasih', title: 'Terima kasih, ITJ Plumpang', text: 'Foto bersama di gerbang Integrated Terminal Jakarta, 7 Oktober 2026.' },
       end: {
         kicker: 'Integrated Terminal Jakarta',
@@ -145,7 +145,7 @@ export const CONTENT = {
       'v.walk': { title: 'Walking the terminal', text: 'Participants walking through the terminal area.' },
       'v.discussion': { title: 'Group discussion', text: 'A group discussion in an ITJ office.' },
       'v.presentation': { title: 'Group presentation', text: 'A group presents the results of its discussion.' },
-      'v.closing': { title: 'Closing discussion', text: 'The closing discussion with ITJ management.' },
+      'v.closing': { title: 'Closing discussion', text: 'The closing discussion with the Mentor.' },
       thanks: { kicker: 'Thank you', title: 'Thank you, ITJ Plumpang', text: 'Group photo at the gate of Integrated Terminal Jakarta, 7 October 2026.' },
       end: {
         kicker: 'Integrated Terminal Jakarta',

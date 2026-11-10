@@ -669,7 +669,7 @@ export default {
     'bab2-peserta-apd': 'Participants listening to the operations briefing in helmets and gloves.',
     'bab2-diskusi-kantor': 'Group discussion in an ITJ office.',
     'bab5-presentasi-tradeoff': 'Group presentation "Investment & Operational Trade-Off": 24 product connections, US$1 million each.',
-    'bab6-diskusi-manajemen': 'Closing discussion with ITJ management.',
+    'bab6-diskusi-manajemen': 'Closing discussion with the Mentor.',
   },
   truck: {
     xray: 'See-through',

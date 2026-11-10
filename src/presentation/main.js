@@ -29,6 +29,7 @@ import { applySunsetStyle } from './worldStyle.js';
 import { createTruckPanel, createTruckTags } from './ui/truckPanel.js';
 import { MAP, HOLDING, BMC, ISO, MAP_DIR, SKY_DIR, lonLat, terminalCenter, GEO } from './world.js';
 import { bboxToWorld } from './scenes/indonesiaMap.js';
+import { registerOffline } from '../offline/register.js';
 
 const SEED = 20261025;
 const BG_PRESETS = ['baseline', 'arrivalPlus50', 'turboShift'];
@@ -885,3 +886,4 @@ const boot = () => {
 };
 const fontReady = document.fonts?.load ? document.fonts.load("700 20px 'Plus Jakarta Sans'").catch(() => null) : Promise.resolve();
 Promise.race([fontReady, new Promise((r) => setTimeout(r, 1500))]).then(boot);
+registerOffline(); // simpan situs di browser untuk dibuka saat jaringan bermasalah

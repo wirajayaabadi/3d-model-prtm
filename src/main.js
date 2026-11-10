@@ -10,6 +10,7 @@ import { createAppBar } from './ui/controls/appBar.js';
 import { createZoomControls } from './ui/controls/zoomControls.js';
 import { createKpiCards } from './ui/dashboard/kpiCards.js';
 import { createSideCard } from './ui/dashboard/sideCard.js';
+import { registerOffline } from './offline/register.js';
 import { createListTabs } from './ui/dashboard/listTabs.js';
 import { createJourneyCard } from './ui/dashboard/journeyCard.js';
 import { createScenarioPanel } from './ui/panels/scenarioPanel.js';
@@ -435,3 +436,4 @@ class App {
 }
 
 document.fonts.ready.then(() => new App());
+registerOffline(); // simpan situs di browser untuk dibuka saat jaringan bermasalah

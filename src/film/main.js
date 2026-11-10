@@ -18,6 +18,7 @@ import { buildTruckShow } from '../presentation/scenes/truckShow.js';
 import { CONTENT } from './content.js';
 import { SHOTS, TOTAL, PARTS, FADE, BAR, VISIT_STEPS, locate, partStart, fmtTime, labelDelay } from './shots.js';
 import { Soundtrack } from './audio.js';
+import { registerOffline } from '../offline/register.js';
 
 const SEED = 20261025;
 const SIM_SPEED = 2;
@@ -68,13 +69,15 @@ class Film {
   }
 
   // ---------- Persiapan ----------
+  // Semua foto diunduh sekali dan disimpan di memori (blob URL). Setelah video siap, pemutaran tidak lagi menyentuh
+  // jaringan, jadi tetap utuh bila koneksi putus di tengah presentasi.
   preload() {
+    this.photoUrl = {};
     const keys = [...new Set(SHOTS.filter((s) => s.photo).map((s) => s.photo))];
-    return Promise.all(keys.map((k) => new Promise((resolve) => {
-      const img = new Image();
-      img.onload = img.onerror = resolve;
-      img.src = MEDIA[k];
-    })));
+    return Promise.all(keys.map((k) => fetch(MEDIA[k])
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((b) => (this.photoUrl[k] = URL.createObjectURL(b)))
+      .catch(() => (this.photoUrl[k] = MEDIA[k])))); // gagal: pakai alamat biasa, dicoba lagi saat tampil
   }
 
   initScene() {
@@ -401,7 +404,7 @@ class Film {
     const img = node.firstChild;
     if (img.dataset.key !== shot.photo) {
       img.dataset.key = shot.photo;
-      img.src = MEDIA[shot.photo];
+      img.src = this.photoUrl?.[shot.photo] || MEDIA[shot.photo];
     }
     img.alt = this.content.shots[shot.id]?.title || '';
     img.style.objectPosition = shot.pos || '50% 50%';
@@ -539,3 +542,4 @@ class Film {
 
 const fontReady = document.fonts?.load ? document.fonts.load("700 20px 'Plus Jakarta Sans'").catch(() => null) : Promise.resolve();
 Promise.race([fontReady, new Promise((r) => setTimeout(r, 1500))]).then(() => (window.__film = new Film()));
+registerOffline(); // simpan situs di browser untuk dibuka saat jaringan bermasalah

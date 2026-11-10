@@ -1,33 +1,30 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fuel Loading Queue Simulation — ITJ Plumpang Case Study</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230067B3%27/%3E%3Cpath d=%27M16 6l9 5v10l-9 5-9-5V11z%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%272.2%27 stroke-linejoin=%27round%27/%3E%3Cpath d=%27M7 11l9 5 9-5M16 16v10%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%272.2%27/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="/src/style.css" />
+    <title>Mengenal ITJ Plumpang · Video perkenalan</title>
+    <meta name="description" content="Video perkenalan Integrated Terminal Jakarta (Plumpang) dari model 3D dan foto kunjungan business immersion. Presentasi akademik, bukan materi resmi Pertamina." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%230067B3%27/%3E%3Cpath d=%27M12 9l12 7-12 7z%27 fill=%27%23fff%27/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/film/style.css" />
   </head>
-  <body>
-    <div id="root">
-      <div id="scene" role="img" aria-label="Isometric 3D scene of the loading terminal: 14 filling bays, waiting area, two gates and storage tanks. Drag to pan, right-drag to rotate, scroll to zoom, click a truck or bay to select it."></div>
+  <body class="prestart">
+    <main id="stage">
+      <div id="scene" role="img" aria-label="Model 3D ilustratif ITJ Plumpang"></div>
+      <div id="photoA" class="photo"><img alt="" /></div>
+      <div id="photoB" class="photo"><img alt="" /></div>
+      <div id="scrim"></div>
       <div id="labels"></div>
-      <div id="tooltip" role="tooltip"><i class="tdot"></i><strong></strong><span></span></div>
-      <header id="appbar"></header>
-      <div id="notices"></div>
-      <div id="kpis"></div>
-      <div id="zoomctl"></div>
-      <aside id="side"></aside>
-      <section id="journey"></section>
-      <section id="lists"></section>
-      <div id="controls"></div>
-      <footer id="footer"></footer>
-      <div id="drawer" hidden><div class="drawer-head"><strong id="drawer-title"></strong><button id="drawer-close" type="button" aria-label="Close">✕</button></div><div id="drawer-body"></div></div>
-      <nav id="drawer-tabs"></nav>
-      <div id="modal" hidden></div>
-      <div id="toast" hidden></div>
-      <div id="loading"><i></i><span>Preparing the terminal…</span></div>
-      <div id="error" role="alert" hidden><strong></strong><p></p><button type="button"></button></div>
-    </div>
-    <script type="module" src="/src/main.js"></script>
+      <section id="caption" aria-live="polite"></section>
+      <div id="modelnote"></div>
+      <div id="dip"></div>
+      <div id="disclaimer"></div>
+      <div id="poster"></div>
+    </main>
+    <nav id="controls" aria-label="Kontrol video"></nav>
+    <div id="loading"><i></i><span>Menyiapkan video…</span></div>
+    <div id="simlabels" hidden></div>
+    <div id="simtooltip" hidden><i></i><strong></strong><span></span></div>
+    <script type="module" src="/src/film/main.js"></script>
   </body>
 </html>

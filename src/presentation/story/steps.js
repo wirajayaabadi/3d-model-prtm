@@ -30,6 +30,11 @@ const ALL_STEPS = [
   { id: 'b4.stakeholders', ch: 4, cam: { kind: 'terminal', dist: 1150, offset: [-20, 0, -30] }, layers: ['ring'] },
   { id: 'b4.community', ch: 4, cam: { kind: 'terminal', dist: 1000, offset: [40, 0, 40] }, layers: ['ring'], highlight: ['buffer'] },
 
+  // Bab Truk (ch 7): panggung terpisah dengan truk interaktif; `truck` memilih mode panel dan adegan.
+  { id: 'b7.truck', ch: 7, cam: { kind: 'truck', dist: 31, dir: [0.62, 0.34, -1], offset: [0.4, -0.5, 0] }, truck: 'parts', panel: 'truck' },
+  { id: 'b7.load', ch: 7, cam: { kind: 'truck', dist: 30, dir: [0.22, 0.4, -1], offset: [0.2, -0.3, 0] }, truck: 'load', panel: 'truck' },
+  { id: 'b7.surge', ch: 7, cam: { kind: 'truck', dist: 32, dir: [0.1, 0.27, -1], offset: [0.2, 0.3, 0] }, truck: 'surge', panel: 'truck' },
+
   { id: 'b5.baseline', ch: 5, cam: { kind: 'focus', anchor: 'bays', dist: 160, offset: [0, 0, 14] }, roofs: true, sim: { preset: 'baseline', minute: 75, speed: 3 }, panel: 'live' },
   { id: 'b5.surge', ch: 5, cam: { kind: 'focus', anchor: 'waiting', dist: 170, offset: [-10, 0, 0] }, sim: { preset: 'arrivalPlus50', minute: 150, speed: 3 }, panel: 'live' },
   { id: 'b5.mix', ch: 5, cam: { kind: 'focus', anchor: 'bays', dist: 150 }, roofs: true, sim: { preset: 'turboShift', minute: 90, speed: 3 }, panel: 'compare' },
@@ -38,10 +43,11 @@ const ALL_STEPS = [
   { id: 'b6.close', ch: 6, cam: { kind: 'sky', dist: 820, offset: [-120, 0, 0] }, trip: 'hold' },
 ];
 
-// Bab yang ditampilkan (fokus ITJ Plumpang): Pembuka, Rantai nilai & stakeholder, Simulasi, Penutup.
-// Bab 1–3 (Company Profile, Business Unit, Business Model) tetap terdefinisi di atas dan di content/, cukup
-// ditambahkan kembali ke daftar ini untuk menampilkannya lagi.
-export const ACTIVE_CHAPTERS = [0, 4, 5, 6];
+// Bab yang ditampilkan (fokus ITJ Plumpang), dalam urutan tampil: Pembuka, Rantai nilai & stakeholder, Truk,
+// Simulasi, Penutup. Bab 1–3 (Company Profile, Business Unit, Business Model) tetap terdefinisi di atas dan di
+// content/, cukup ditambahkan kembali ke daftar ini untuk menampilkannya lagi. Urutan langkah mengikuti ALL_STEPS,
+// jadi langkah sebuah bab harus berada di posisi yang sama dengan babnya di daftar ini.
+export const ACTIVE_CHAPTERS = [0, 4, 7, 5, 6];
 export const STEPS = ALL_STEPS.filter((s) => ACTIVE_CHAPTERS.includes(s.ch));
 export const CHAPTER_COUNT = ACTIVE_CHAPTERS.length;
 

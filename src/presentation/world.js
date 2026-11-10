@@ -6,6 +6,7 @@ export const MAP = { cx: -1250, cz: 40, scale: 15, lon0: 118, lat0: -2.5 }; // 1
 export const HOLDING = { cx: -420, cz: 50, w: 170, d: 120 };
 export const SPBU = { cx: -262, cz: 40 };
 export const BMC = { cx: 150, cy: 33, cz: -30 };
+export const TRUCK = { cx: 1350, y: -0.1, cz: 60 }; // panggung bab Truk: tanah kosong jauh di timur terminal; kamera memandang ke selatan
 
 export const ISO = new THREE.Vector3(-1, 1.05, 1).normalize(); // arah kamera isometrik simulasi (barat daya)
 export const MAP_DIR = new THREE.Vector3(0, 1.0, 0.72).normalize(); // peta: dari selatan, utara di atas layar

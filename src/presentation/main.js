@@ -24,13 +24,16 @@ import { buildCanvasBoard } from './scenes/canvasBoard.js';
 import { buildValueChainFlow, buildStakeholderRing } from './scenes/valueChain.js';
 import { buildSpbu } from './scenes/spbu.js';
 import { buildHighlights } from './scenes/highlights.js';
+import { buildTruckShow } from './scenes/truckShow.js';
+import { applySunsetStyle } from './worldStyle.js';
+import { createTruckPanel, createTruckTags } from './ui/truckPanel.js';
 import { MAP, HOLDING, BMC, ISO, MAP_DIR, SKY_DIR, lonLat, terminalCenter, GEO } from './world.js';
 import { bboxToWorld } from './scenes/indonesiaMap.js';
 
 const SEED = 20261025;
 const BG_PRESETS = ['baseline', 'arrivalPlus50', 'turboShift'];
 const BG_HOURS = 6;
-const FOG = { terminal: [700, 1900], holding: [1100, 3000], map: [2400, 6500] };
+const FOG = { terminal: [700, 1900], holding: [1100, 3000], map: [2400, 6500], truck: [70, 330] };
 
 function presetEngine(presetId) {
   const cfg = createPresetConfig(presetId);
@@ -151,8 +154,8 @@ class App {
     const { scene, M, renderer } = this.view;
     const layout = this.engine.layout, config = this.engine.config;
     // Tanah jauh di bawah seluruh dunia (peta, diorama, SPBU)
-    const far = new THREE.Mesh(new THREE.PlaneGeometry(3000, 1200).rotateX(-Math.PI / 2), M.ground);
-    far.position.set(-700, -0.3, 60);
+    const far = new THREE.Mesh(new THREE.PlaneGeometry(4400, 1200).rotateX(-Math.PI / 2), M.ground); // barat: peta dan diorama; timur: panggung truk
+    far.position.set(0, -0.3, 60);
     scene.add(far);
     this.map = buildIndonesiaMap({ M, renderer });
     this.holding = buildHolding({ M });
@@ -163,9 +166,11 @@ class App {
     this.ring = buildStakeholderRing({ center: this.ringCenter, radius: 400, stakeholders: this.content.stakeholders });
     this.spbu = buildSpbu({ M, renderer, layout, config, scene });
     this.hl = buildHighlights({ layout, config, M });
-    for (const g of [this.map.group, this.holding.group, this.bmc.group, this.flow.group, this.ring.group, this.spbu.group, this.hl.group]) scene.add(g);
+    this.truck = buildTruckShow({ M, products: config.products });
+    this.truckTags = createTruckTags(this.$('trucktags'), { truck: this.truck, onPart: (key) => this.focusTruckPart(this.truck.state.part === key ? null : key), onComp: (i) => this.truck.select(i) });
+    for (const g of [this.map.group, this.holding.group, this.bmc.group, this.flow.group, this.ring.group, this.spbu.group, this.hl.group, this.truck.group]) scene.add(g);
     this.bmc.setAnchors({ ...this.hl.anchors, spbu: this.spbu.anchor });
-    this.pickables = [...this.map.pickables, ...this.holding.pickables, ...this.bmc.pickables, ...this.ring.pickables, ...this.spbu.pickables];
+    this.pickables = [...this.map.pickables, ...this.holding.pickables, ...this.bmc.pickables, ...this.ring.pickables, ...this.spbu.pickables, ...this.truck.pickables];
     this.buildLabelDefs();
   }
 
@@ -211,6 +216,7 @@ class App {
   // ---------- Langkah ----------
   cameraGoal(step) {
     const cam = step.cam;
+    if (cam.kind === 'truck') return this.truck.cameraGoal(cam);
     const layout = this.engine.layout;
     const off = new THREE.Vector3(...(cam.offset || [0, 0, 0]));
     const tgt = new THREE.Vector3(), pos = new THREE.Vector3();
@@ -255,6 +261,7 @@ class App {
     const k = step.cam.kind;
     if (k === 'map' || k === 'mapAt') return FOG.map;
     if (k === 'holding') return FOG.holding;
+    if (k === 'truck') return FOG.truck;
     return FOG.terminal;
   }
 
@@ -274,6 +281,13 @@ class App {
     this.holding.setFlow(layers.has('holdingFlow'));
     this.ring.group.visible = layers.has('ring');
     this.hl.show(step.highlight || []);
+    // Bab Truk: mode adegan, dan seret kiri memutar truk (di langkah lain seret kiri menggeser tampilan)
+    this.truck.setMode(step.truck || null);
+    if (step.truck) this.truck.group.visible = true;
+    this.truckHideAt = step.truck ? null : performance.now() + (ctx.immediate ? 0 : 3000); // tetap terlihat selama kamera terbang menjauh
+    const controls = this.view.rig.controls, orbit = !!step.truck;
+    controls.mouseButtons.LEFT = orbit ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN;
+    controls.touches.ONE = orbit ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN;
     this.view.setMode(step.roofs ? 'roofsOff' : step.zones ? 'zones' : 'operation');
     // Kelompok label yang tampil
     const g = new Set();
@@ -316,6 +330,7 @@ class App {
     this.renderHeroLayer();
     renderCoverBackdrop(this.$('coverbg'), step.id === 'b0.cover');
     document.body.classList.toggle('cover-step', step.id === 'b0.cover');
+    document.body.classList.toggle('truck-step', !!step.truck);
     const first = this.story.positionInChapter().n === 1;
     if (first && ctx.dir === 1 && !ctx.immediate && step.ch > 0 && !this.reduceMotion) showChapterIntro(this.$('intro'), { content: this.content, lang: this.lang, ch: step.ch });
     else hideChapterIntro(this.$('intro'));
@@ -369,37 +384,12 @@ class App {
     }
     this.setDetail(open);
   }
-  // Kontras lebih tinggi untuk proyektor: tanah lebih gelap dari plot, matahari lebih hangat, eksposur sedikit naik.
-  // Palet "senja": tanah rumput, plot krem hangat, aspal gelap, zona pasir/biru, cahaya matahari rendah kekuningan.
-  // Hanya berlaku di halaman presentasi (material dibagi, tetapi diubah setelah SceneView dibuat di halaman ini).
   styleWorld() {
-    const { M, renderer, sun, scene } = this.view;
-    M.ground.color.set('#C9DDB3');
-    M.plot.color.set('#E7E1D4');
-    M.zoneBay.color.set('#E2DBCC');
-    M.zoneApproach.color.set('#D9E6F2');
-    M.zoneWaiting.color.set('#F3D9A6');
-    M.asphalt.color.set('#5B6670');
-    M.asphaltLight.color.set('#737E89');
-    M.concrete.color.set('#D8CFC0');
-    M.concreteLight.color.set('#E6DED0');
-    M.leaf.color.set('#4FAE6B');
-    M.hedge.color.set('#8BD18F');
-    renderer.toneMappingExposure = 1.12;
-    scene.environmentIntensity = 0.5;
-    sun.color.set('#FFD9B0');
-    sun.intensity = 3.2;
-    const hemi = scene.children.find((o) => o.isHemisphereLight);
-    if (hemi) {
-      hemi.color.set('#F3D0B5');
-      hemi.groundColor.set('#9FB8C8');
-      hemi.intensity = 1.35;
-    }
-    scene.fog.color.set('#E6D5C8');
+    applySunsetStyle(this.view);
   }
   // Satu warna aksen per bab (kicker, kartu angka pertama, posisi langkah)
   applyAccent(ch) {
-    const ACCENT = ['#0067B3', '#0067B3', '#3FA587', '#5A5FB0', '#F07C00', '#E31E2D', '#4E9A2F'];
+    const ACCENT = ['#0067B3', '#0067B3', '#3FA587', '#5A5FB0', '#F07C00', '#E31E2D', '#4E9A2F', '#8E44AD'];
     document.body.style.setProperty('--accent', ACCENT[ch] || ACCENT[0]);
   }
 
@@ -407,7 +397,8 @@ class App {
   renderStepCard() {
     const step = this.currentStep;
     const data = this.content.steps[step.id];
-    this.simPanel = step.panel ? createSimPanel({ content: this.content, mode: step.panel, lang: this.lang, getEngine: () => this.engine, getRuns: () => this.bg.runs }) : null;
+    if (step.truck) this.simPanel = createTruckPanel({ content: this.content, lang: this.lang, mode: step.truck, truck: this.truck, products: this.engine.config.products, onFocus: (key) => this.focusTruckPart(key) });
+    else this.simPanel = step.panel ? createSimPanel({ content: this.content, mode: step.panel, lang: this.lang, getEngine: () => this.engine, getRuns: () => this.bg.runs }) : null;
     renderCard(this.$('card'), {
       content: this.content,
       step,
@@ -415,6 +406,7 @@ class App {
       chapter: this.content.chapters[step.ch],
       position: this.story.positionInChapter(),
       simPanel: this.simPanel?.root,
+      panelFirst: !!step.truck,
       onPhoto: (key, list) => this.openPhoto(key, list),
       lang: this.lang,
     });
@@ -442,6 +434,22 @@ class App {
       lang: this.lang,
     });
     this.$('card').scrollTop = 0;
+  }
+  // Bab Truk: pilih satu bagian (kamera mendekat) atau kembali ke seluruh truk
+  focusTruckPart(key) {
+    const step = this.currentStep;
+    if (!step?.truck) return;
+    this.truck.setPart(key);
+    const goal = key ? this.truck.cameraGoal({ part: key }) : this.cameraGoal(step);
+    this.view.rig.flyTo(goal.pos, goal.tgt, { rate: 2.6 });
+    this.drift = { goal, since: null };
+  }
+  onTruckPick(key) {
+    const mode = this.currentStep?.truck;
+    if (!mode) return;
+    const i = +key.split(':')[2];
+    if (mode === 'load') this.truck.select(i);
+    else if (mode === 'parts') this.focusTruckPart('tank');
   }
   openPhoto(key, list) {
     this.lightbox = { key, list };
@@ -638,6 +646,7 @@ class App {
       if (key) {
         this.pendingObject = key;
         if (key.startsWith('prov:')) this.onProvinceClick(key.slice(5));
+        else if (key.startsWith('truck:')) this.onTruckPick(key);
         else this.showObjectCard(key);
       }
     }, { capture: true });
@@ -646,6 +655,7 @@ class App {
       const key = this.pickPresentation(e.clientX, e.clientY);
       if (key) canvas.style.cursor = 'pointer';
       this.map.setHover(key && key.startsWith('prov:') ? key.slice(5) : null);
+      this.truck.setHover(key && key.startsWith('truck:comp:') ? +key.split(':')[2] : -1);
     });
     window.addEventListener('keydown', (e) => this.onKey(e));
     document.addEventListener('visibilitychange', () => {
@@ -721,6 +731,11 @@ class App {
     if (low === 'f') return handled(), this.toggleFullscreen();
     if (low === 'h') return handled(), this.toggleHelp();
     if (low === 'd') return handled(), this.toggleDetail();
+    if (this.currentStep?.truck) {
+      if (low === 'x') return handled(), this.truck.setXray();
+      if (low === 'b' && this.currentStep.truck === 'surge') return handled(), this.truck.toggleDrive();
+      if (low === 'k' && this.currentStep.truck === 'surge') return handled(), this.truck.setBulkheads();
+    }
   }
 
   toggleMode() {
@@ -816,6 +831,10 @@ class App {
     this.flow.update(dt);
     this.hl.update(dt);
     this.spbu.update(dt);
+    if (this.truck.group.visible) {
+      if (this.truckHideAt != null && performance.now() >= this.truckHideAt) this.truck.group.visible = false; // dari terminal, panggung truk tidak perlu digambar
+      else this.truck.update(dt);
+    }
     if (this.currentStep?.cam.kind === 'trip' && this.spbu.trip.active && this.mode !== 'explore') {
       const goal = this.cameraGoal(this.currentStep);
       this.view.rig.flyTo(goal.pos, goal.tgt, { rate: 2.2 });
@@ -847,6 +866,7 @@ class App {
     }
     this.view.update(this.prevPoses, alpha, dt, { clock: formatSimTime(e.time, e.config.operations.calendar), running: this.running });
     this.updateLabels();
+    this.truckTags.update({ camera: this.view.rig.camera, w: this.view.canvas.clientWidth, h: this.view.canvas.clientHeight, content: this.content, lang: this.lang, products: this.engine.config.products });
     if (!this._avoidAt || performance.now() - this._avoidAt > 400) {
       this._avoidAt = performance.now();
       const r = this.$('hero').getBoundingClientRect(), c = this.view.canvas.getBoundingClientRect();

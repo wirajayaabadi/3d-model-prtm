@@ -42,7 +42,7 @@ export function createAppBar(container, app) {
     el('button', { class: 'iconbtn', title: ID.tower.drawers.params, onClick: () => app.openDrawer('params') }, '⚙'),
     el('button', { class: 'iconbtn', title: ID.tower.drawers.dashboard, onClick: () => app.openDrawer('dashboard') }, '📊'),
   ];
-  const pres = el('a', { class: 'presbtn', href: './presentasi/', title: ID.tower.openPresentation, text: `▶ ${ID.tower.openPresentation}` });
+  const pres = el('a', { class: 'presbtn', href: '../presentasi/', title: ID.tower.openPresentation, text: `▶ ${ID.tower.openPresentation}` });
   const user = el('div', { class: 'user' }, el('span', { class: 'avatar', text: 'M' }), el('div', {}, el('strong', { text: ID.tower.user }), el('small', { text: ID.tower.userRole })));
   container.append(logo, search, el('span', { class: 'spacer' }), pres, site, live, run, ...drawerBtns, bell, menu, user);
 

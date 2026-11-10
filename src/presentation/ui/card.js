@@ -4,7 +4,7 @@ import { el, clear } from '../../ui/dom.js';
 import { MEDIA } from '../content/index.js';
 import { chapterNo } from '../story/steps.js';
 
-export function renderCard(container, { content, step, data, chapter, position, simPanel, onPhoto, objectMode, onBack, lang }) {
+export function renderCard(container, { content, step, data, chapter, position, simPanel, panelFirst, onPhoto, objectMode, onBack, lang }) {
   clear(container);
   const ui = content.ui;
   if (!data) return;
@@ -17,6 +17,7 @@ export function renderCard(container, { content, step, data, chapter, position, 
   container.append(head);
   container.append(el('h2', { text: data.title }));
   if (data.lead) container.append(el('p', { class: 'lead', text: data.lead }));
+  if (simPanel && panelFirst) container.append(simPanel); // panel interaktif tepat di bawah kalimat pembuka
   if (data.bullets?.length) container.append(el('ul', { class: 'bullets' }, ...data.bullets.map((b) => el('li', { text: b }))));
   if (data.facts?.length) {
     const grid = el('dl', { class: 'facts' });
@@ -29,7 +30,7 @@ export function renderCard(container, { content, step, data, chapter, position, 
     }
     container.append(grid);
   }
-  if (simPanel) container.append(simPanel);
+  if (simPanel && !panelFirst) container.append(simPanel);
   if (data.media?.length) {
     const strip = el('div', { class: 'media' });
     for (const key of data.media) {

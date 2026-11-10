@@ -114,7 +114,7 @@ export class StoryEngine {
     const start = this.timer.chapterStart[ch] ?? total;
     const chapterElapsed = Math.max(0, total - start);
     const budget = (this.chapters[ch]?.minutes || 1) * 60;
-    const planned = ACTIVE_CHAPTERS.filter((c) => c < ch).reduce((s, c) => s + (this.chapters[c]?.minutes || 0) * 60, 0);
+    const planned = ACTIVE_CHAPTERS.slice(0, chapterNo(ch)).reduce((s, c) => s + (this.chapters[c]?.minutes || 0) * 60, 0);
     return { total, chapterElapsed, budget, over: chapterElapsed > budget, plannedStart: planned, running: this.timer.running };
   }
 

@@ -88,7 +88,7 @@ export function buildSpbu({ M, renderer, layout, config, scene }) {
     new THREE.Vector3(C.x - 6, 0, C.z - 6),
   ], false, 'catmullrom', 0.1);
   const length = path.getLength();
-  const trip = { active: false, s: 0, done: false, speed: 7.5, pos: new THREE.Vector3(), start() { this.active = true; this.done = false; this.s = 0; truck.visible = true; wheels.mesh.visible = true; }, stop() { this.active = false; truck.visible = false; wheels.mesh.visible = false; } };
+  const trip = { length, active: false, s: 0, done: false, speed: 7.5, pos: new THREE.Vector3(), start() { this.active = true; this.done = false; this.s = 0; truck.visible = true; wheels.mesh.visible = true; }, stop() { this.active = false; truck.visible = false; wheels.mesh.visible = false; } };
   const tangent = new THREE.Vector3();
   return {
     group,

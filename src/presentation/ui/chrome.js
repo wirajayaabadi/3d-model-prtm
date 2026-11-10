@@ -69,7 +69,8 @@ export function buildChrome(app) {
       el('button', { type: 'button', onClick: () => app.toggleMode(), text: app.mode === 'explore' ? ui.presenter : ui.explore }),
       el('button', { type: 'button', onClick: () => app.openNotes(), text: ui.openNotes }),
       el('button', { type: 'button', onClick: () => app.toggleLanguage(), text: `${ui.language}: ${app.lang === 'id' ? 'Indonesia' : 'English'}` }),
-      el('a', { href: '../', target: '_blank', rel: 'noopener', class: 'linkbtn', text: ui.openSim }),
+      el('a', { href: '../', target: '_blank', rel: 'noopener', class: 'linkbtn', text: ui.openVideo }),
+      el('a', { href: '../simulasi/', target: '_blank', rel: 'noopener', class: 'linkbtn', text: ui.openSim }),
     ));
     menu.append(box);
     menu.onclick = (e) => {
@@ -107,7 +108,7 @@ export function buildChrome(app) {
     refs.chapterBtns.forEach((b, i) => {
       const ch = ACTIVE_CHAPTERS[i];
       b.classList.toggle('active', ch === step.ch);
-      b.classList.toggle('done', ch < step.ch);
+      b.classList.toggle('done', i < chapterNo(step.ch));
     });
     refs.progress.firstChild.style.width = `${((story.index + 1) / story.total) * 100}%`;
     refs.pos.firstChild.textContent = `${ui.chapter} ${chapterNo(step.ch)} · ${n}/${of}`;

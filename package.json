@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "headless": "node scripts/run-headless.js",
-    "bake:trucks": "node scripts/bake-trucks.mjs"
+    "bake:trucks": "node scripts/bake-trucks.mjs",
+    "bake:showcase": "node scripts/bake-showcase-truck.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"

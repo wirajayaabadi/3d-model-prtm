@@ -24,11 +24,14 @@ export const HERO = {
     'b4.itjChain': [['Balongan → Plumpang', 'pipa pasokan'], ['>120', 'lembaga penyalur'], ['3', 'wilayah: Jabodetabek, Bandung, Garut']],
     'b4.stakeholders': [['9', 'stakeholder utama (draf)', true], ['6', 'kelompok kepentingan']],
     'b4.community': [['Buffer zone', 'dipercepat menurut materi ITJ', true]],
+    'b7.truck': [['32.000 L', 'muatan satu truk'], ['4', 'kompartemen'], ['8.000 L', 'per kompartemen']],
+    'b7.load': [['4 produk', 'dalam satu perjalanan'], ['8.000 L', 'per kompartemen']],
+    'b7.surge': [['3', 'dinding sekat'], ['Liquid surge', 'guncangan cairan saat truk mengerem']],
     'b5.baseline': [['ρ 0,73', 'stabil'], ['18', 'truk/jam datang'], ['24,8', 'truk/jam kapasitas']],
     'b5.surge': [['ρ 1,09', 'kelebihan beban'], ['27', 'truk/jam datang'], ['24,8', 'truk/jam kapasitas']],
     'b5.mix': [['5', 'bay bisa melayani Turbo'], ['ρ 0,70', 'kelompok Turbo 40%'], ['US$1 jt', 'per koneksi produk', true]],
     'b6.insights': [['±⅕', 'BBM nasional lewat satu lokasi'], ['2 arah', 'negara menetapkan harga & membayar selisih'], ['Bauran', 'produk × koneksi bay = kapasitas']],
-    'b6.close': [['2', 'rekomendasi'], ['Terima kasih', 'tim ITJ Plumpang']],
+    'b6.close': [['324.000 kL', 'kapasitas timbun'], ['16.504 kL', 'penyaluran per hari'], ['>120', 'lembaga penyalur']],
   },
   en: {
     'b0.cover': [['16,504 kL', 'fuel delivered by ITJ per day'], ['±20%', 'of national fuel demand'], ['7 Oct 2026', 'site visit']],
@@ -53,17 +56,20 @@ export const HERO = {
     'b4.itjChain': [['Balongan → Plumpang', 'supply pipeline'], ['>120', 'outlets served'], ['3', 'areas: Greater Jakarta, Bandung, Garut']],
     'b4.stakeholders': [['9', 'key stakeholders (draft)', true], ['6', 'interest groups']],
     'b4.community': [['Buffer zone', 'being accelerated per ITJ material', true]],
+    'b7.truck': [['32,000 L', 'carried by one truck'], ['4', 'compartments'], ['8,000 L', 'per compartment']],
+    'b7.load': [['4 products', 'in a single trip'], ['8,000 L', 'per compartment']],
+    'b7.surge': [['3', 'bulkheads'], ['Liquid surge', 'the load pushing forward under braking']],
     'b5.baseline': [['ρ 0.73', 'stable'], ['18', 'trucks/h arriving'], ['24.8', 'trucks/h capacity']],
     'b5.surge': [['ρ 1.09', 'overloaded'], ['27', 'trucks/h arriving'], ['24.8', 'trucks/h capacity']],
     'b5.mix': [['5', 'bays can serve Turbo'], ['ρ 0.70', 'Turbo group at 40%'], ['US$1 m', 'per product connection', true]],
     'b6.insights': [['±⅕', 'of national fuel through one site'], ['Both ways', 'state sets prices & pays the gap'], ['Mix', 'products × bay connections = capacity']],
-    'b6.close': [['2', 'recommendations'], ['Thank you', 'ITJ Plumpang team']],
+    'b6.close': [['324,000 kL', 'storage capacity'], ['16,504 kL', 'delivered per day'], ['>120', 'outlets served']],
   },
 };
 
 // Foto latar dan pertanyaan pemandu untuk transisi antar bab.
 export const CHAPTER_INTRO = {
-  photos: ['bab0-gerbang-itj', 'bab0-briefing', 'bab2-briefing-lapangan', 'bab0-pembukaan', 'bab2-area-terminal', 'bab5-presentasi-tradeoff', 'bab6-diskusi-manajemen'],
+  photos: ['bab0-gerbang-itj', 'bab0-briefing', 'bab2-briefing-lapangan', 'bab0-pembukaan', 'bab2-area-terminal', 'bab5-presentasi-tradeoff', 'bab6-diskusi-manajemen', 'bab2-briefing-lapangan'],
   id: [
     'Siapa kami dan apa yang kami kunjungi?',
     'Apa itu Pertamina, dan mengapa penting bagi negara?',
@@ -71,7 +77,8 @@ export const CHAPTER_INTRO = {
     'Bagaimana Pertamina menciptakan dan menangkap nilai?',
     'Bagaimana BBM mengalir dari hulu ke hilir, dan siapa yang berkepentingan?',
     'Apa yang kami pelajari tentang kapasitas filling bay?',
-    'Apa kesimpulan dan rekomendasi kami?',
+    'Apa yang kami bawa pulang dari ITJ Plumpang?',
+    'Dengan apa BBM keluar dari ITJ Plumpang?',
   ],
   en: [
     'Who we are and what we visited',
@@ -80,6 +87,7 @@ export const CHAPTER_INTRO = {
     'How does Pertamina create and capture value?',
     'How does fuel flow from upstream to downstream, and who has a stake?',
     'What did we learn about filling-bay capacity?',
-    'Our conclusions and recommendations',
+    'What we take home from ITJ Plumpang',
+    'What carries the fuel out of ITJ Plumpang?',
   ],
 };
